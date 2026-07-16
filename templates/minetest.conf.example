@@ -1,0 +1,11 @@
+server_announce = false
+secure.enable_security = true
+default_privs = interact, shout
+creative_mode = true
+enable_damage = false
+mg_name = flat
+mgflat_ground_level = 8
+time_speed = 0
+
+evolution_mode = __EVOLUTION_MODE__
+evolution_origin_y = 20000

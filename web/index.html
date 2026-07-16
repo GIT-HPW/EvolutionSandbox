@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+    <meta name="description" content="EvolutionSandbox 可点击规则小闭环：从零维原点演化到首个三维领域。">
+    <title>EvolutionSandbox · 原点演化实验</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="app.mjs"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">EVOLUTION / RULES PROTOTYPE 0.1</p>
+        <h1>原点演化实验</h1>
+        <p class="lead">你是零维混沌体中的原始能量信息体。观察、撕裂与融合会改变系统；当认知和熵越过阈值，首个三维领域将出现。</p>
+      </header>
+
+      <section class="state" aria-labelledby="state-title">
+        <div class="section-title">
+          <h2 id="state-title">当前宇宙状态</h2>
+          <span id="phase-badge">载入中</span>
+        </div>
+        <div id="stats" class="stats" aria-live="polite"></div>
+        <p id="objective" class="objective"></p>
+      </section>
+
+      <section aria-labelledby="actions-title">
+        <div class="section-title">
+          <h2 id="actions-title">可执行行为</h2>
+          <button id="reset" class="quiet" type="button">重置宇宙</button>
+        </div>
+        <div id="actions" class="actions"></div>
+      </section>
+
+      <section id="timeline-panel" class="timeline" hidden aria-labelledby="timeline-title">
+        <h2 id="timeline-title">建立时间线分支</h2>
+        <div class="timeline-form">
+          <input id="timeline-name" maxlength="32" value="alpha-1" aria-label="时间线名称">
+          <button id="branch" type="button">保存分支</button>
+        </div>
+      </section>
+
+      <section aria-labelledby="log-title">
+        <h2 id="log-title">事件记录</h2>
+        <ol id="log" class="log" aria-live="polite"></ol>
+      </section>
+
+      <footer>
+        <p>此页面和 Luanti 模组共用同一内容包与确定性规则。玩家存档、世界文件和 API 密钥不会进入此演示。</p>
+        <a href="https://github.com/GIT-HPW/EvolutionSandbox">查看源码与 Luanti 版本</a>
+      </footer>
+    </main>
+  </body>
+</html>

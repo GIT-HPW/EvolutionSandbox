@@ -1,0 +1,26 @@
+name: Bug report
+description: 报告可复现的规则、网页或 Luanti 问题
+title: "bug: "
+labels: [bug]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题
+      description: 发生了什么，预期是什么？
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 请使用不含真实玩家数据或密钥的最小步骤。
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本与环境
+      placeholder: EvolutionSandbox 0.1.0 / Luanti 版本 / 游戏
+    validations:
+      required: true

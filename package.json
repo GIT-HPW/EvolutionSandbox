@@ -1,0 +1,27 @@
+{
+  "name": "evolution-sandbox",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A data-driven playable sandbox based on the Evolution universe",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build:content": "node scripts/build-content.mjs",
+    "check:content": "node scripts/build-content.mjs --check",
+    "build:web": "node scripts/build-web.mjs",
+    "demo": "node cli/demo.mjs",
+    "runtime:prepare": "node scripts/prepare-runtime.mjs",
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test test/*.test.mjs scripts/*.test.mjs",
+    "check:lua": "node scripts/check-lua.mjs",
+    "check:public": "node scripts/check-public-tree.mjs",
+    "check": "npm run check:content && npm run build:web && npm test && npm run check:lua && npm run check:public",
+    "verify": "npm run check && npm run demo && npm audit --audit-level=high"
+  },
+  "devDependencies": {
+    "luaparse": "^0.3.1"
+  }
+}

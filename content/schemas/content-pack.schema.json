@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GIT-HPW/EvolutionSandbox/content/schemas/content-pack.schema.json",
+  "title": "EvolutionSandbox content pack",
+  "type": "object",
+  "required": ["schemaVersion", "id", "version", "initialState", "limits", "phases", "actions", "demo"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$" },
+    "version": { "type": "string" },
+    "title": { "type": "string" },
+    "license": { "type": "string" },
+    "source": { "type": "object" },
+    "initialState": { "type": "object" },
+    "limits": { "type": "object" },
+    "phases": { "type": "array", "minItems": 1 },
+    "actions": { "type": "object", "minProperties": 1 },
+    "demo": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

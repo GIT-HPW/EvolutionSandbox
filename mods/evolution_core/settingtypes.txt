@@ -1,0 +1,6 @@
+# EvolutionSandbox mode: standalone teleports joining players into managed realms;
+# integrated only enters a realm after the player runs /evo start.
+evolution_mode (Runtime mode) enum standalone standalone,integrated
+
+# Base Y coordinate used by the isolated 0D realm. The first 3D realm is 100 nodes above it.
+evolution_origin_y (Origin realm height) int 20000 1000 30000
