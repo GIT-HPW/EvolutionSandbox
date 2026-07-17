@@ -1,0 +1,13 @@
+# The bridge is active only when this mod is enabled, HTTP permission is granted,
+# and evolution_bridge_token contains at least 32 characters.
+evolution_bridge_enabled (Enable ESIP bridge) bool true
+
+# Loopback HTTP endpoint. Public or LAN addresses are intentionally rejected.
+evolution_bridge_url (ESIP sidecar URL) string http://127.0.0.1:7070
+
+evolution_bridge_source (Luanti ESIP source) string esip://luanti/world-alpha
+evolution_bridge_adapter_id (Luanti ESIP adapter ID) string luanti-world-alpha
+evolution_bridge_universe_id (ESIP universe ID) string universe-1
+evolution_bridge_allowed_sources (Allowed ESIP command sources) string esip://local/control
+evolution_bridge_poll_interval (Command poll interval in seconds) float 1.0 0.2 30.0
+evolution_bridge_poll_batch (Maximum commands per poll) int 4 1 8

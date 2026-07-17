@@ -9,3 +9,6 @@ time_speed = 0
 
 evolution_mode = __EVOLUTION_MODE__
 evolution_origin_y = 20000
+
+# The ESIP bridge is opt-in. runtime:prepare writes its local-only token and
+# secure.http_mods entry when EVOLUTION_ESIP_TOKEN is present.

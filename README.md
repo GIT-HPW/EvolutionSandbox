@@ -77,7 +77,17 @@ npm run demo:interop
 
 参考演示会让网页控制端通过内存路由器向 Luanti 规则侧车发送完整的原点行为序列，权威规则端返回已确认状态，并验证权限、目标路由、revision、幂等和序列控制。
 
-ESIP 当前是 `experimental/0.1`：适合开发适配器和验证语义，不应直接暴露到公网，也不宣称已经提供生产级持久消息或跨游戏资产事务。完整规范见 [ESIP-0001](protocol/ESIP-0001.md)，平台接入见 [跨游戏通信指南](docs/interop.md)。
+仓库同时提供真实的 Luanti ↔ Node sidecar 小闭环。设置至少 32 字符的本地令牌后，`runtime:prepare` 会选择性安装 `evolution_bridge`：
+
+```powershell
+$env:EVOLUTION_ESIP_TOKEN = [guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")
+npm run runtime:prepare
+npm run sidecar
+```
+
+另开终端运行 `npm run dev`，玩家进入服务器后可执行 `npm run sidecar:client -- state <玩家名>` 或 `npm run sidecar:client -- action <玩家名> observe`。完整的三终端步骤、Linux 命令和排错见 [跨游戏通信指南](docs/interop.md)。
+
+ESIP 当前是 `experimental/0.1`：真实 sidecar 强制只监听回环地址，适合本机开发和单机部署，不应直接暴露到公网，也不宣称已经提供生产级持久消息或跨游戏资产事务。完整规范见 [ESIP-0001](protocol/ESIP-0001.md)。
 
 ## 接入已有世界
 
@@ -111,7 +121,8 @@ content/       世界观到规则的内容包与 schema
 protocol/      ESIP 规范、消息 schema、示例和 AsyncAPI
 src/           与引擎无关的确定性规则实现
 web/           可点击浏览器演示
-mods/          Luanti 模组和领域呈现
+mods/          Luanti 核心玩法模组与 ESIP bridge
+cli/           规则演示、sidecar 和本地控制端
 scripts/       构建、运行时准备、安全检查与集成测试
 test/          规则回归测试
 docs/          架构、集成和迭代说明
@@ -122,7 +133,7 @@ docs/          架构、集成和迭代说明
 - “零维”目前是 Luanti 三维空间中的隔离规则领域，并非真正的零维物理模拟。
 - 首版只有原点到首个三维领域，尚未实现 32 维、平行宇宙服务器编排、NPC 或经济系统。
 - 多人共享领域，但每位玩家的演化数值和时间线名称独立保存；时间线的世界级分叉仍在路线图中。
-- ESIP 参考路由器只在内存中去重和排序；重启恢复、持久事件流和真实第二游戏适配器尚未实现。
+- ESIP 已完成真实 Luanti 本机 HTTP 往返，但 sidecar 队列仍在内存中；重启恢复、持久事件流和真实第二游戏适配器尚未实现。
 - 世界文件、玩家数据、模型权重和 API 密钥都不属于源码仓库。
 
 路线优先级是：稳定小闭环 → 第二游戏平台 ESIP 适配器 → 多人时间线事件 → 持久事件传输 → openVirFactory AI 导演 → G2Reality 坐标领域 → 多世界/多服务器维度。

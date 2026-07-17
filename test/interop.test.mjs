@@ -65,6 +65,7 @@ test("message construction enforces ESIP kind, target and known payload", () => 
   assert.throws(() => validateMessage({ ...message, type: "io.evolution.custom.unknown.v1" }), (error) => error.code === "unknown_type")
   assert.throws(() => validateMessage({ ...message, dataschema: "https://example.invalid/wrong.json" }), (error) => error.code === "schema_mismatch")
   assert.throws(() => validateMessage({ ...message, data: { ...message.data, unexpected: true } }), (error) => error.code === "invalid_message")
+  assert.throws(() => validateMessage({ ...message, unexpected: true }), (error) => error.code === "invalid_message")
   assert.throws(() => validateMessage({ ...message, data: { ...message.data, parameters: { value: Number.NaN } } }), (error) => error.code === "invalid_message")
   assert.throws(() => createMessage({ ...message, id: "expired-1", expiresat: NOW.toISOString() }, { now: () => NOW }), (error) => error.code === "expired")
 })

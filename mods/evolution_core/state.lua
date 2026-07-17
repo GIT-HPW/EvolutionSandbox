@@ -3,6 +3,7 @@
 local api = {}
 local pack = evolution_core.content
 local META_KEY = "evolution:state"
+local REVISION_KEY = "evolution:revision"
 
 local function copy(value)
     if type(value) ~= "table" then return value end
@@ -48,9 +49,15 @@ function api.get_state(player)
     return normalize(value)
 end
 
+function api.get_revision(player)
+    return math.max(0, player:get_meta():get_int(REVISION_KEY))
+end
+
 function api.save_state(player, state)
     state = normalize(state)
-    player:get_meta():set_string(META_KEY, minetest.write_json(state))
+    local meta = player:get_meta()
+    meta:set_string(META_KEY, minetest.write_json(state))
+    meta:set_int(REVISION_KEY, api.get_revision(player) + 1)
     return state
 end
 

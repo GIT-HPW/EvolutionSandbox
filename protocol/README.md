@@ -12,6 +12,8 @@ npm run demo:interop
 
 演示会在同一进程中启动一个网页控制端适配器、一个 Luanti 规则侧车适配器和内存路由器。控制端通过 ESIP 发送完整的原点行为序列，权威规则端验证并执行，最后返回三维领域状态。
 
+需要验证真实 Luanti 进程时，使用仓库中的认证回环 HTTP sidecar、`evolution_bridge` 和控制端 CLI；完整步骤见 [`docs/interop.md`](../docs/interop.md)。该传输实现不会改变本页定义的 ESIP 外壳和 payload。
+
 最小发送示例（保存到仓库根目录的 `.mjs` 文件）：
 
 ```js
@@ -56,6 +58,7 @@ await client.emit(TYPES.ACTION_REQUESTED, "command", {
 - [`examples/`](examples/)：可以复制和验证的完整消息。
 - [`asyncapi.json`](asyncapi.json)：AsyncAPI 3.0 频道与消息说明。
 - [`src/interop/`](../src/interop/)：零传输依赖的参考 SDK、路由器和规则适配器。
+- [`mods/evolution_bridge/`](../mods/evolution_bridge/)：真实 Luanti 进程的受控 ESIP HTTP 适配器。
 
 在线 schema 地址为 `https://git-hpw.github.io/EvolutionSandbox/esip/schemas/<name>.schema.json`。
 

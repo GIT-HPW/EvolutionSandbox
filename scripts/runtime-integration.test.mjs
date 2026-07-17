@@ -26,10 +26,12 @@ test("existing world integration is opt-in and preserves player data", async () 
     runtime: process.env.EVOLUTION_RUNTIME_DIR,
     world: process.env.EVOLUTION_WORLD_DIR,
     mode: process.env.EVOLUTION_MODE,
+    token: process.env.EVOLUTION_ESIP_TOKEN,
   }
   process.env.EVOLUTION_RUNTIME_DIR = runtimeDir
   process.env.EVOLUTION_WORLD_DIR = worldDir
   delete process.env.EVOLUTION_MODE
+  delete process.env.EVOLUTION_ESIP_TOKEN
 
   try {
     const result = await prepareRuntime()
@@ -49,7 +51,53 @@ test("existing world integration is opt-in and preserves player data", async () 
       EVOLUTION_RUNTIME_DIR: previous.runtime,
       EVOLUTION_WORLD_DIR: previous.world,
       EVOLUTION_MODE: previous.mode,
+      EVOLUTION_ESIP_TOKEN: previous.token,
     })) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+    await rm(testRoot, { recursive: true, force: true })
+  }
+})
+
+test("ESIP bridge installation is opt-in and keeps its token outside the source tree", async () => {
+  const testRoot = await mkdtemp(join(tmpdir(), "evolutionsandbox-bridge-"))
+  const runtimeDir = join(testRoot, "runtime")
+  const optionalNames = [
+    "ESIP_SIDECAR_URL", "ESIP_LUANTI_SOURCE", "ESIP_LUANTI_ADAPTER_ID",
+    "ESIP_UNIVERSE_ID", "ESIP_ALLOWED_COMMAND_SOURCES",
+  ]
+  const previous = {
+    runtime: process.env.EVOLUTION_RUNTIME_DIR,
+    world: process.env.EVOLUTION_WORLD_DIR,
+    token: process.env.EVOLUTION_ESIP_TOKEN,
+    optional: Object.fromEntries(optionalNames.map((name) => [name, process.env[name]])),
+  }
+  process.env.EVOLUTION_RUNTIME_DIR = runtimeDir
+  delete process.env.EVOLUTION_WORLD_DIR
+  for (const name of optionalNames) delete process.env[name]
+  process.env.EVOLUTION_ESIP_TOKEN = "x".repeat(32) + "\nsecure.http_mods = attacker"
+  await assert.rejects(prepareRuntime(), /URL-safe ASCII/)
+  process.env.EVOLUTION_ESIP_TOKEN = "runtime-test-token-" + "x".repeat(40)
+
+  try {
+    const result = await prepareRuntime()
+    assert.equal(result.bridgeEnabled, true)
+    assert.match(await readFile(join(result.worldDir, "world.mt"), "utf8"), /^load_mod_evolution_bridge = true$/m)
+    assert.match(await readFile(result.configPath, "utf8"), /^secure\.http_mods = evolution_bridge$/m)
+    assert.match(await readFile(result.configPath, "utf8"), /^evolution_bridge_token = runtime-test-token-x+$/m)
+    assert.equal(await readFile(join(result.worldDir, "worldmods", "evolution_bridge", ".evolutionsandbox-managed"), "utf8"),
+      "Managed by EvolutionSandbox prepare-runtime.mjs\n")
+  } finally {
+    for (const [key, value] of Object.entries({
+      EVOLUTION_RUNTIME_DIR: previous.runtime,
+      EVOLUTION_WORLD_DIR: previous.world,
+      EVOLUTION_ESIP_TOKEN: previous.token,
+    })) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+    for (const [key, value] of Object.entries(previous.optional)) {
       if (value === undefined) delete process.env[key]
       else process.env[key] = value
     }

@@ -14,6 +14,8 @@
     "build:web": "node scripts/build-web.mjs",
     "demo": "node cli/demo.mjs",
     "demo:interop": "node cli/interop-demo.mjs",
+    "sidecar": "node cli/sidecar.mjs",
+    "sidecar:client": "node cli/sidecar-client.mjs",
     "runtime:prepare": "node scripts/prepare-runtime.mjs",
     "dev": "node scripts/dev.mjs",
     "test": "npm run build:web && node --test test/*.test.mjs scripts/*.test.mjs",

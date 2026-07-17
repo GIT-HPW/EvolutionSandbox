@@ -9,12 +9,12 @@
 openVirFactory 是可选的 AI/自动化控制层，不是启动 EvolutionSandbox 的前置条件。组合时：
 
 1. 将 `factory_core`、`factory_ai` 和 `evolution_core` 放到同一世界的 `worldmods/`。
-2. 在服务端配置 `secure.http_mods = factory_ai`。
+2. 在服务端配置 `secure.http_mods = factory_ai,evolution_bridge`（未启用 ESIP 时不需要后者）。
 3. 使用至少 32 字节的随机桥接令牌。
 4. 将节点白名单设为 `factory_core:,evolution_core:`。
 5. 保持 `secure.enable_security = true`，不要恢复任意 Lua 执行接口。
 
-这只授权 AI 操作允许的节点。玩家演化行为仍通过 `/evo` 或 `evolution_core.api.apply_action` 的受控调用执行。ESIP 接入应放在 Node Agent 侧车，由它验证 schema、来源、目标和权限，再映射到逐项允许的结构化命令；禁止加入 `run_lua`。
+这只授权 AI 操作允许的节点。玩家演化行为仍通过 `/evo` 或 `evolution_core.api.apply_action` 的受控调用执行。仓库内置 sidecar 已验证 schema、来源、目标和权限，再由 `evolution_bridge` 映射到逐项允许的结构化命令；未来可把同一 ESIP 传输模块嵌入 openVirFactory Node Agent，但不能绕过 bridge 白名单或加入 `run_lua`。
 
 ## 已有世界与玩家数据
 

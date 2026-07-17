@@ -6,6 +6,11 @@ import { EsipError } from "./errors.mjs"
 const TYPE_PATTERN = /^[a-z][a-z0-9]*(?:\.[a-z0-9_]+){2,}\.v[1-9][0-9]*$/
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/
 const ACTION_PATTERN = /^[a-z][a-z0-9_]{0,63}$/
+const ENVELOPE_FIELDS = [
+  "specversion", "esipversion", "id", "source", "type", "kind", "time",
+  "subject", "target", "datacontenttype", "dataschema", "sequence", "tick",
+  "correlationid", "causationid", "expiresat", "data",
+]
 
 function plainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -151,6 +156,7 @@ function validatePayload(message) {
 
 export function validateEnvelope(message, { now = Date.now() } = {}) {
   requireObject(message, "message")
+  rejectUnknown(message, ENVELOPE_FIELDS, "message")
   if (message.specversion !== CLOUD_EVENTS_VERSION) throw new EsipError("unsupported_version", "specversion must be 1.0")
   if (message.esipversion !== ESIP_VERSION) throw new EsipError("unsupported_version", `esipversion must be ${ESIP_VERSION}`)
   requireId(message.id, "id")
