@@ -39,5 +39,5 @@ jobs:
         if: always()
         run: |
           echo "## EvolutionSandbox verification" >> "$GITHUB_STEP_SUMMARY"
-          echo "Rules, content generation, existing-world preservation, Lua syntax, browser build, public-tree secrets and dependency audit were checked." >> "$GITHUB_STEP_SUMMARY"
+          echo "Rules, ESIP schemas/examples/router, content generation, existing-world preservation, Lua syntax, browser build, public-tree secrets and dependency audit were checked." >> "$GITHUB_STEP_SUMMARY"
           echo "A tested source ZIP is attached when this workflow succeeds." >> "$GITHUB_STEP_SUMMARY"

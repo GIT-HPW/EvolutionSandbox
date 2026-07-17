@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/state.schema.json",
+  "title": "Evolution player state",
+  "type": "object",
+  "required": ["phase", "dimension", "energy", "information", "entropy", "stability", "fragments", "timeline", "steps"],
+  "properties": {
+    "schema": { "type": "integer", "minimum": 1 },
+    "phase": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "dimension": { "type": "integer", "minimum": 0 },
+    "energy": { "type": "integer", "minimum": 0 },
+    "information": { "type": "integer", "minimum": 0 },
+    "entropy": { "type": "integer", "minimum": 0 },
+    "stability": { "type": "integer", "minimum": 0 },
+    "fragments": { "type": "integer", "minimum": 0 },
+    "timeline": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "steps": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

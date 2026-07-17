@@ -9,4 +9,5 @@
 ## 验证
 
 - [ ] `npm run verify`
+- [ ] ESIP 变更已同步 schema、AsyncAPI、示例、运行时验证和兼容性说明
 - [ ] 未提交世界、玩家数据、日志或密钥

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/realm-transitioned-v1.schema.json",
+  "title": "Evolution realm transition event v1",
+  "type": "object",
+  "required": ["context", "fromRealm", "toRealm", "fromDimension", "toDimension", "revision"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true, "realmId": true }, "required": ["actorId", "realmId"] }] },
+    "fromRealm": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "toRealm": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "fromDimension": { "type": "integer", "minimum": 0, "maximum": 1024 },
+    "toDimension": { "type": "integer", "minimum": 0, "maximum": 1024 },
+    "revision": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

@@ -1,6 +1,6 @@
 {
   "name": "evolution-sandbox",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "A data-driven playable sandbox based on the Evolution universe",
   "license": "GPL-3.0-or-later",
@@ -13,15 +13,18 @@
     "check:content": "node scripts/build-content.mjs --check",
     "build:web": "node scripts/build-web.mjs",
     "demo": "node cli/demo.mjs",
+    "demo:interop": "node cli/interop-demo.mjs",
     "runtime:prepare": "node scripts/prepare-runtime.mjs",
     "dev": "node scripts/dev.mjs",
-    "test": "node --test test/*.test.mjs scripts/*.test.mjs",
+    "test": "npm run build:web && node --test test/*.test.mjs scripts/*.test.mjs",
+    "check:protocol": "node scripts/check-protocol.mjs",
     "check:lua": "node scripts/check-lua.mjs",
     "check:public": "node scripts/check-public-tree.mjs",
-    "check": "npm run check:content && npm run build:web && npm test && npm run check:lua && npm run check:public",
-    "verify": "npm run check && npm run demo && npm audit --audit-level=high"
+    "check": "npm run check:content && npm run check:protocol && npm test && npm run check:lua && npm run check:public",
+    "verify": "npm run check && npm run demo && npm run demo:interop && npm audit --audit-level=high"
   },
   "devDependencies": {
+    "ajv": "^8.17.1",
     "luaparse": "^0.3.1"
   }
 }

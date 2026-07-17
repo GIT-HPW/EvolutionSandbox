@@ -1,0 +1,26 @@
+name: ESIP proposal
+description: 提议跨游戏消息、适配器或传输改进
+title: "esip: "
+labels: [protocol]
+body:
+  - type: textarea
+    id: platforms
+    attributes:
+      label: 平台与使用场景
+      description: 哪两个或更多平台需要通信？谁拥有最终状态写入权？
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: 消息契约
+      description: 命令、事件、查询或结果的字段、版本、权限和失败语义。
+    validations:
+      required: true
+  - type: textarea
+    id: reliability
+    attributes:
+      label: 可靠性与安全
+      description: 如何处理重复、乱序、断线、幂等、认证和隐私？
+    validations:
+      required: true

@@ -1,0 +1,22 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "result-error-1",
+  "source": "esip://luanti/world-alpha",
+  "type": "io.evolution.error.v1",
+  "kind": "result",
+  "time": "2026-07-17T00:00:12.000Z",
+  "subject": "actor/player-42",
+  "target": "esip://web/control-panel",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/error-v1.schema.json",
+  "sequence": 11,
+  "correlationid": "origin-session-1",
+  "causationid": "command-invalid-1",
+  "data": {
+    "respondingTo": "command-invalid-1",
+    "code": "revision_conflict",
+    "message": "expected revision 7, current revision is 8",
+    "retryable": true
+  }
+}

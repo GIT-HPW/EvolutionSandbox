@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/state-snapshot-v1.schema.json",
+  "title": "Evolution state snapshot result v1",
+  "type": "object",
+  "required": ["context", "respondingTo", "revision", "state"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true, "realmId": true }, "required": ["actorId", "realmId"] }] },
+    "respondingTo": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "state": { "$ref": "state.schema.json" }
+  },
+  "additionalProperties": false
+}

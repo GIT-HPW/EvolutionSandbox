@@ -1,0 +1,23 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "query-state-1",
+  "source": "esip://web/control-panel",
+  "type": "io.evolution.state.requested.v1",
+  "kind": "query",
+  "time": "2026-07-17T00:00:02.000Z",
+  "subject": "actor/player-42",
+  "target": "esip://luanti/world-alpha",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/state-requested-v1.schema.json",
+  "sequence": 2,
+  "correlationid": "origin-session-1",
+  "data": {
+    "context": {
+      "universeId": "universe-1",
+      "timelineId": "origin",
+      "actorId": "player-42"
+    },
+    "fields": ["phase", "energy", "information", "entropy"]
+  }
+}

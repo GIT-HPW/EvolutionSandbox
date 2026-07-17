@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/action-requested-v1.schema.json",
+  "title": "Evolution action request v1",
+  "type": "object",
+  "required": ["context", "actionId", "parameters", "expectedRevision"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true, "realmId": true }, "required": ["actorId", "realmId"] }] },
+    "actionId": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{0,63}$" },
+    "parameters": { "type": "object" },
+    "expectedRevision": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

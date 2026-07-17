@@ -1,0 +1,20 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "hello-luanti-1",
+  "source": "esip://luanti/world-alpha",
+  "type": "io.evolution.capability.hello.v1",
+  "kind": "event",
+  "time": "2026-07-17T00:00:00.000Z",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/capability-hello-v1.schema.json",
+  "sequence": 0,
+  "data": {
+    "adapterId": "luanti-world-alpha",
+    "platform": "luanti",
+    "protocolVersions": ["0.1"],
+    "consumes": ["io.evolution.action.requested.v1", "io.evolution.state.requested.v1"],
+    "produces": ["io.evolution.action.applied.v1", "io.evolution.state.snapshot.v1"],
+    "maxMessageBytes": 65536
+  }
+}

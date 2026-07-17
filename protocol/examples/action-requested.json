@@ -1,0 +1,26 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "command-observe-1",
+  "source": "esip://web/control-panel",
+  "type": "io.evolution.action.requested.v1",
+  "kind": "command",
+  "time": "2026-07-17T00:00:01.000Z",
+  "subject": "actor/player-42",
+  "target": "esip://luanti/world-alpha",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/action-requested-v1.schema.json",
+  "sequence": 1,
+  "correlationid": "origin-session-1",
+  "data": {
+    "context": {
+      "universeId": "universe-1",
+      "timelineId": "origin",
+      "realmId": "origin_0d",
+      "actorId": "player-42"
+    },
+    "actionId": "observe",
+    "parameters": {},
+    "expectedRevision": 0
+  }
+}

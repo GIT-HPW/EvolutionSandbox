@@ -1,0 +1,40 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "event-observe-1",
+  "source": "esip://luanti/world-alpha",
+  "type": "io.evolution.action.applied.v1",
+  "kind": "event",
+  "time": "2026-07-17T00:00:01.050Z",
+  "subject": "actor/player-42",
+  "target": "esip://web/control-panel",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/action-applied-v1.schema.json",
+  "sequence": 1,
+  "correlationid": "origin-session-1",
+  "causationid": "command-observe-1",
+  "data": {
+    "context": {
+      "universeId": "universe-1",
+      "timelineId": "origin",
+      "realmId": "origin_0d",
+      "actorId": "player-42"
+    },
+    "commandId": "command-observe-1",
+    "actionId": "observe",
+    "outcome": "applied",
+    "revision": 1,
+    "state": {
+      "schema": 1,
+      "phase": "origin_0d",
+      "dimension": 0,
+      "energy": 24,
+      "information": 3,
+      "entropy": 2,
+      "stability": 11,
+      "fragments": 0,
+      "timeline": "origin",
+      "steps": 1
+    }
+  }
+}

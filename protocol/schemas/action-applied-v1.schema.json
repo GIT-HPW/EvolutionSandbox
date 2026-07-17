@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/action-applied-v1.schema.json",
+  "title": "Evolution action applied event v1",
+  "type": "object",
+  "required": ["context", "commandId", "actionId", "outcome", "revision", "state"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true, "realmId": true }, "required": ["actorId", "realmId"] }] },
+    "commandId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "actionId": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{0,63}$" },
+    "outcome": { "const": "applied" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "state": { "$ref": "state.schema.json" }
+  },
+  "additionalProperties": false
+}

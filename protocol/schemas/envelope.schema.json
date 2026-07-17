@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/envelope.schema.json",
+  "title": "ESIP 0.1 CloudEvents-compatible envelope",
+  "type": "object",
+  "required": ["specversion", "esipversion", "id", "source", "type", "kind", "time", "datacontenttype", "dataschema", "sequence", "data"],
+  "properties": {
+    "specversion": { "const": "1.0" },
+    "esipversion": { "const": "0.1" },
+    "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "source": { "type": "string", "minLength": 1, "maxLength": 255, "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:" },
+    "type": { "type": "string", "maxLength": 128, "pattern": "^[a-z][a-z0-9]*(?:\\.[a-z0-9_]+){2,}\\.v[1-9][0-9]*$" },
+    "kind": { "enum": ["command", "event", "query", "result"] },
+    "time": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.+-]+Z$" },
+    "subject": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "target": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "datacontenttype": { "const": "application/json" },
+    "dataschema": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "tick": { "type": "integer", "minimum": 0 },
+    "correlationid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "causationid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "expiresat": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.+-]+Z$" },
+    "data": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "enum": ["command", "query"] } }, "required": ["kind"] },
+      "then": { "type": "object", "properties": { "target": true }, "required": ["target"] }
+    }
+  ],
+  "additionalProperties": true
+}

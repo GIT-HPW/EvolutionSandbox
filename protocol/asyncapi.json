@@ -1,0 +1,32 @@
+{
+  "asyncapi": "3.0.0",
+  "info": {
+    "title": "EvolutionSandbox Interop Protocol",
+    "version": "0.1.0",
+    "description": "Transport-neutral command, event, query and result contracts for EvolutionSandbox adapters."
+  },
+  "defaultContentType": "application/json",
+  "x-esip-envelope": "./schemas/envelope.schema.json",
+  "channels": {
+    "capabilityHello": { "address": "io.evolution.capability.hello.v1", "messages": { "message": { "$ref": "#/components/messages/capabilityHello" } } },
+    "actionRequested": { "address": "io.evolution.action.requested.v1", "messages": { "message": { "$ref": "#/components/messages/actionRequested" } } },
+    "actionApplied": { "address": "io.evolution.action.applied.v1", "messages": { "message": { "$ref": "#/components/messages/actionApplied" } } },
+    "stateRequested": { "address": "io.evolution.state.requested.v1", "messages": { "message": { "$ref": "#/components/messages/stateRequested" } } },
+    "stateSnapshot": { "address": "io.evolution.state.snapshot.v1", "messages": { "message": { "$ref": "#/components/messages/stateSnapshot" } } },
+    "realmTransitioned": { "address": "io.evolution.realm.transitioned.v1", "messages": { "message": { "$ref": "#/components/messages/realmTransitioned" } } },
+    "timelineCreated": { "address": "io.evolution.timeline.created.v1", "messages": { "message": { "$ref": "#/components/messages/timelineCreated" } } },
+    "error": { "address": "io.evolution.error.v1", "messages": { "message": { "$ref": "#/components/messages/error" } } }
+  },
+  "components": {
+    "messages": {
+      "capabilityHello": { "name": "capabilityHello", "x-esip-kind": "event", "payload": { "$ref": "./schemas/capability-hello-v1.schema.json" } },
+      "actionRequested": { "name": "actionRequested", "x-esip-kind": "command", "payload": { "$ref": "./schemas/action-requested-v1.schema.json" } },
+      "actionApplied": { "name": "actionApplied", "x-esip-kind": "event", "payload": { "$ref": "./schemas/action-applied-v1.schema.json" } },
+      "stateRequested": { "name": "stateRequested", "x-esip-kind": "query", "payload": { "$ref": "./schemas/state-requested-v1.schema.json" } },
+      "stateSnapshot": { "name": "stateSnapshot", "x-esip-kind": "result", "payload": { "$ref": "./schemas/state-snapshot-v1.schema.json" } },
+      "realmTransitioned": { "name": "realmTransitioned", "x-esip-kind": "event", "payload": { "$ref": "./schemas/realm-transitioned-v1.schema.json" } },
+      "timelineCreated": { "name": "timelineCreated", "x-esip-kind": "event", "payload": { "$ref": "./schemas/timeline-created-v1.schema.json" } },
+      "error": { "name": "error", "x-esip-kind": "result", "payload": { "$ref": "./schemas/error-v1.schema.json" } }
+    }
+  }
+}

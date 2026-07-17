@@ -10,17 +10,21 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const site = resolve(root, "dist", "site")
 
 test("browser build is self-contained and uses the shared rules engine", async () => {
-  const [html, app, packText] = await Promise.all([
+  const [html, app, packText, _styles, envelopeSchema, asyncApi] = await Promise.all([
     readFile(resolve(site, "index.html"), "utf8"),
     readFile(resolve(site, "app.mjs"), "utf8"),
     readFile(resolve(site, "origin.json"), "utf8"),
     readFile(resolve(site, "styles.css"), "utf8"),
+    readFile(resolve(site, "esip", "schemas", "envelope.schema.json"), "utf8"),
+    readFile(resolve(site, "esip", "asyncapi.json"), "utf8"),
   ])
   assert.match(html, /Content-Security-Policy/)
   assert.match(html, /script-src 'self'/)
   assert.doesNotMatch(html, /\son[a-z]+\s*=/i)
   assert.match(app, /from "\.\/rules-engine\.mjs"/)
   assert.match(app, /fetch\("\.\/origin\.json"\)/)
+  assert.equal(JSON.parse(envelopeSchema).properties.esipversion.const, "0.1")
+  assert.equal(JSON.parse(asyncApi).asyncapi, "3.0.0")
 
   const engine = await import(pathToFileURL(resolve(site, "rules-engine.mjs")))
   const pack = engine.validatePack(JSON.parse(packText))

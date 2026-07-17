@@ -1,0 +1,29 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "event-transition-1",
+  "source": "esip://luanti/world-alpha",
+  "type": "io.evolution.realm.transitioned.v1",
+  "kind": "event",
+  "time": "2026-07-17T00:00:10.000Z",
+  "subject": "actor/player-42",
+  "target": "esip://web/control-panel",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/realm-transitioned-v1.schema.json",
+  "sequence": 9,
+  "correlationid": "origin-session-1",
+  "causationid": "command-big-bang-1",
+  "data": {
+    "context": {
+      "universeId": "universe-1",
+      "timelineId": "origin",
+      "realmId": "first_3d",
+      "actorId": "player-42"
+    },
+    "fromRealm": "origin_0d",
+    "toRealm": "first_3d",
+    "fromDimension": 0,
+    "toDimension": 3,
+    "revision": 7
+  }
+}

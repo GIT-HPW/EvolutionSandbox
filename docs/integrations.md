@@ -14,7 +14,7 @@ openVirFactory 是可选的 AI/自动化控制层，不是启动 EvolutionSandbo
 4. 将节点白名单设为 `factory_core:,evolution_core:`。
 5. 保持 `secure.enable_security = true`，不要恢复任意 Lua 执行接口。
 
-这只授权 AI 操作允许的节点。玩家演化行为仍通过 `/evo` 或 `evolution_core.api.apply_action` 的受控调用执行；未来若开放 AI 触发行为，应新增逐项验证的结构化命令，而不是 `run_lua`。
+这只授权 AI 操作允许的节点。玩家演化行为仍通过 `/evo` 或 `evolution_core.api.apply_action` 的受控调用执行。ESIP 接入应放在 Node Agent 侧车，由它验证 schema、来源、目标和权限，再映射到逐项允许的结构化命令；禁止加入 `run_lua`。
 
 ## 已有世界与玩家数据
 
@@ -22,4 +22,4 @@ openVirFactory 是可选的 AI/自动化控制层，不是启动 EvolutionSandbo
 
 ## G2Reality 与 SportX
 
-G2Reality 可在未来提供坐标映射、现实地图生成和物理设备边界；SportX 可提供时间轴、事件日历和网页信息架构参考。两者都应通过稳定事件或适配器连接，避免成为 `evolution_core` 的硬依赖。
+G2Reality 可在未来提供坐标映射、现实地图生成和物理设备边界；SportX 可提供时间轴、事件日历和网页信息架构参考。两者都应通过 [ESIP 适配器](interop.md) 连接，避免成为 `evolution_core` 的硬依赖。
