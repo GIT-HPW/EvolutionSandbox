@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.3.1 - 2026-07-20
+
+- 统一处理 Windows 与 POSIX 可执行文件路径，修复 Linux CI 对 `luanti.exe` 路径的识别。
+
 ## 0.3.0 - 2026-07-20
 
 - 增加真实的 Luanti `evolution_bridge` ↔ Node ESIP sidecar 本机 HTTP 闭环。
