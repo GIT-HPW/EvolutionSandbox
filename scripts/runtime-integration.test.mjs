@@ -44,6 +44,8 @@ test("existing world integration is opt-in and preserves player data", async () 
     assert.deepEqual(await readFile(join(worldDir, "auth.sqlite")), authData)
     assert.equal(await readFile(join(worldDir, "worldmods", "evolution_core", ".evolutionsandbox-managed"), "utf8"),
       "Managed by EvolutionSandbox prepare-runtime.mjs\n")
+    assert.match(await readFile(join(worldDir, "worldmods", "evolution_core", "identity.lua"), "utf8"), /identity_registry_v1/)
+    assert.match(await readFile(join(worldDir, "worldmods", "evolution_core", "timelines.lua"), "utf8"), /timeline_registry_v1/)
     assert.equal(await readFile(join(result.backupDir, "world.mt"), "utf8"), oldWorld)
     assert.match(await readFile(join(result.backupDir, "evolution_core", "mod.conf"), "utf8"), /legacy = true/)
   } finally {

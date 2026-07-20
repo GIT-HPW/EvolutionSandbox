@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-registry-requested-v1.schema.json",
+  "title": "Evolution timeline registry query v1",
+  "type": "object",
+  "required": ["context", "afterRevision"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true }, "required": ["actorId"] }] },
+    "afterRevision": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

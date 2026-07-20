@@ -6,7 +6,7 @@
   "type": "io.evolution.realm.transitioned.v1",
   "kind": "event",
   "time": "2026-07-17T00:00:10.000Z",
-  "subject": "actor/player-42",
+  "subject": "actor/actor-42",
   "target": "esip://web/control-panel",
   "datacontenttype": "application/json",
   "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/realm-transitioned-v1.schema.json",
@@ -18,7 +18,7 @@
       "universeId": "universe-1",
       "timelineId": "origin",
       "realmId": "first_3d",
-      "actorId": "player-42"
+      "actorId": "actor-42"
     },
     "fromRealm": "origin_0d",
     "toRealm": "first_3d",

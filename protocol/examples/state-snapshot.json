@@ -6,7 +6,7 @@
   "type": "io.evolution.state.snapshot.v1",
   "kind": "result",
   "time": "2026-07-17T00:00:02.030Z",
-  "subject": "actor/player-42",
+  "subject": "actor/actor-42",
   "target": "esip://web/control-panel",
   "datacontenttype": "application/json",
   "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/state-snapshot-v1.schema.json",
@@ -18,7 +18,7 @@
       "universeId": "universe-1",
       "timelineId": "origin",
       "realmId": "origin_0d",
-      "actorId": "player-42"
+      "actorId": "actor-42"
     },
     "respondingTo": "query-state-1",
     "revision": 1,

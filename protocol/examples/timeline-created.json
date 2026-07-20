@@ -6,7 +6,7 @@
   "type": "io.evolution.timeline.created.v1",
   "kind": "event",
   "time": "2026-07-17T00:00:11.000Z",
-  "subject": "actor/player-42",
+  "subject": "actor/actor-42",
   "datacontenttype": "application/json",
   "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-created-v1.schema.json",
   "sequence": 10,
@@ -16,7 +16,7 @@
       "universeId": "universe-1",
       "timelineId": "alpha-1",
       "realmId": "first_3d",
-      "actorId": "player-42"
+      "actorId": "actor-42"
     },
     "parentTimelineId": "origin",
     "newTimelineId": "alpha-1",

@@ -1,0 +1,34 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "result-timeline-registry-1",
+  "source": "esip://luanti/world-alpha",
+  "target": "esip://local/control",
+  "type": "io.evolution.timeline.registry.snapshot.v1",
+  "kind": "result",
+  "time": "2026-07-17T00:00:17.000Z",
+  "subject": "actor/actor-42",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-registry-snapshot-v1.schema.json",
+  "sequence": 15,
+  "correlationid": "query-timeline-registry-1",
+  "causationid": "query-timeline-registry-1",
+  "data": {
+    "context": {
+      "universeId": "universe-1",
+      "timelineId": "alpha-1",
+      "realmId": "first_3d",
+      "actorId": "actor-42"
+    },
+    "respondingTo": "query-timeline-registry-1",
+    "registryRevision": 1,
+    "timelines": [
+      { "timelineId": "origin", "createdByActorId": "system", "registryRevision": 0 },
+      { "timelineId": "alpha-1", "parentTimelineId": "origin", "createdByActorId": "actor-42", "registryRevision": 1 }
+    ],
+    "events": [
+      { "timelineId": "alpha-1", "parentTimelineId": "origin", "createdByActorId": "actor-42", "registryRevision": 1 }
+    ],
+    "truncated": false
+  }
+}

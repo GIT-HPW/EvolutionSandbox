@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-created-v2.schema.json",
+  "title": "Evolution world timeline creation event v2",
+  "type": "object",
+  "required": ["context", "commandId", "parentTimelineId", "newTimelineId", "createdByActorId", "stateRevision", "registryRevision"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true, "realmId": true }, "required": ["actorId", "realmId"] }] },
+    "commandId": { "$ref": "context.schema.json#/$defs/id" },
+    "parentTimelineId": { "$ref": "context.schema.json#/$defs/id" },
+    "newTimelineId": { "$ref": "context.schema.json#/$defs/id" },
+    "createdByActorId": { "$ref": "context.schema.json#/$defs/id" },
+    "stateRevision": { "type": "integer", "minimum": 0 },
+    "registryRevision": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

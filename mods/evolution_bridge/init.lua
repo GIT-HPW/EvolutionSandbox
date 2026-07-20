@@ -48,6 +48,12 @@ local TYPES = {
     state_requested = "io.evolution.state.requested.v1",
     state_snapshot = "io.evolution.state.snapshot.v1",
     realm_transitioned = "io.evolution.realm.transitioned.v1",
+    timeline_create_requested = "io.evolution.timeline.create.requested.v1",
+    timeline_created_v2 = "io.evolution.timeline.created.v2",
+    timeline_join_requested = "io.evolution.timeline.join.requested.v1",
+    timeline_joined = "io.evolution.timeline.joined.v1",
+    timeline_registry_requested = "io.evolution.timeline.registry.requested.v1",
+    timeline_registry_snapshot = "io.evolution.timeline.registry.snapshot.v1",
     error = "io.evolution.error.v1",
 }
 
@@ -58,6 +64,12 @@ local SCHEMAS = {
     [TYPES.state_requested] = "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/state-requested-v1.schema.json",
     [TYPES.state_snapshot] = "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/state-snapshot-v1.schema.json",
     [TYPES.realm_transitioned] = "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/realm-transitioned-v1.schema.json",
+    [TYPES.timeline_create_requested] = "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-create-requested-v1.schema.json",
+    [TYPES.timeline_created_v2] = "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-created-v2.schema.json",
+    [TYPES.timeline_join_requested] = "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-join-requested-v1.schema.json",
+    [TYPES.timeline_joined] = "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-joined-v1.schema.json",
+    [TYPES.timeline_registry_requested] = "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-registry-requested-v1.schema.json",
+    [TYPES.timeline_registry_snapshot] = "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-registry-snapshot-v1.schema.json",
     [TYPES.error] = "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/error-v1.schema.json",
 }
 
@@ -119,7 +131,6 @@ local function validate_context(context, require_realm)
     end
     if require_realm and not valid_id(context.realmId) then return nil, "invalid_context", "realmId is required" end
     if context.realmId ~= nil and not valid_id(context.realmId) then return nil, "invalid_context", "realmId is invalid" end
-    if not minetest.is_valid_player_name(context.actorId) then return nil, "invalid_actor", "actorId is not a valid Luanti player name" end
     return true
 end
 
@@ -168,7 +179,46 @@ local function validate_command(message)
         end
         return true
     end
-    return nil, "unknown_type", "only action and state requests are accepted"
+
+    if message.type == TYPES.timeline_create_requested then
+        if message.kind ~= "command" then return nil, "kind_mismatch", "timeline create request must be a command" end
+        local allowed = { context = true, newTimelineId = true, expectedStateRevision = true, expectedRegistryRevision = true }
+        if not reject_unknown(message.data, allowed) then return nil, "invalid_message", "timeline create data contains unsupported fields" end
+        local ok, code, reason = validate_context(message.data.context, true)
+        if not ok then return nil, code, reason end
+        if not valid_id(message.data.newTimelineId) or #message.data.newTimelineId > 32
+                or not message.data.newTimelineId:match("^[%w_-]+$") then
+            return nil, "invalid_timeline", "newTimelineId is invalid"
+        end
+        if not integer(message.data.expectedStateRevision) or not integer(message.data.expectedRegistryRevision) then
+            return nil, "invalid_revision", "timeline revisions must be non-negative integers"
+        end
+        return true
+    end
+
+    if message.type == TYPES.timeline_join_requested then
+        if message.kind ~= "command" then return nil, "kind_mismatch", "timeline join request must be a command" end
+        local allowed = { context = true, targetTimelineId = true, expectedStateRevision = true, expectedRegistryRevision = true }
+        if not reject_unknown(message.data, allowed) then return nil, "invalid_message", "timeline join data contains unsupported fields" end
+        local ok, code, reason = validate_context(message.data.context, true)
+        if not ok then return nil, code, reason end
+        if not valid_id(message.data.targetTimelineId) then return nil, "invalid_timeline", "targetTimelineId is invalid" end
+        if not integer(message.data.expectedStateRevision) or not integer(message.data.expectedRegistryRevision) then
+            return nil, "invalid_revision", "timeline revisions must be non-negative integers"
+        end
+        return true
+    end
+
+    if message.type == TYPES.timeline_registry_requested then
+        if message.kind ~= "query" then return nil, "kind_mismatch", "timeline registry request must be a query" end
+        local allowed = { context = true, afterRevision = true }
+        if not reject_unknown(message.data, allowed) then return nil, "invalid_message", "timeline registry query contains unsupported fields" end
+        local ok, code, reason = validate_context(message.data.context, false)
+        if not ok then return nil, code, reason end
+        if not integer(message.data.afterRevision) then return nil, "invalid_revision", "afterRevision must be a non-negative integer" end
+        return true
+    end
+    return nil, "unknown_type", "only declared Evolution commands and queries are accepted"
 end
 
 local function next_sequence()
@@ -220,7 +270,12 @@ end
 
 local function remember(command, descriptor)
     if not handled.responses[command.id] then table.insert(handled.order, command.id) end
-    handled.responses[command.id] = { source = command.source, type = command.type, descriptor = descriptor }
+    handled.responses[command.id] = {
+        source = command.source,
+        type = command.type,
+        fingerprint = command.__bridge_fingerprint,
+        descriptor = descriptor,
+    }
     while #handled.order > MAX_HANDLED do
         local removed = table.remove(handled.order, 1)
         handled.responses[removed] = nil
@@ -312,12 +367,12 @@ local function respond_error(command, code, message, retryable)
     })
 end
 
-local function current_context(player, state)
+local function current_context(state, actor_id)
     return {
         universeId = universe_id,
         timelineId = state.timeline,
         realmId = state.phase,
-        actorId = player:get_player_name(),
+        actorId = actor_id,
     }
 end
 
@@ -337,14 +392,31 @@ local function process_command(command)
         return
     end
 
+    command.__bridge_fingerprint = minetest.sha1(encoded)
+
     local cached = handled.responses[command.id]
     if cached then
-        if cached.source == command.source and cached.type == command.type then emit_descriptor(cached.descriptor)
-        else minetest.log("warning", "[evolution_bridge] ignored a reused command id from a different message") end
+        if cached.source == command.source and cached.type == command.type
+                and cached.fingerprint == command.__bridge_fingerprint then
+            emit_descriptor(cached.descriptor)
+        else
+            emit_descriptor(descriptor_for(command, TYPES.error, "result", {
+                respondingTo = command.id,
+                code = "id_conflict",
+                message = "command id was reused with different content",
+                retryable = false,
+            }))
+        end
         return
     end
 
-    local player = minetest.get_player_by_name(command.data.context.actorId)
+    local actor_id = command.data.context.actorId
+    local player_name = evolution_core.identity.resolve_actor(actor_id)
+    if not player_name then
+        respond_error(command, "identity_unmapped", "actorId is not bound to a local player", false)
+        return
+    end
+    local player = minetest.get_player_by_name(player_name)
     if not player then
         respond_error(command, "actor_offline", "target player is not online", true)
         return
@@ -354,10 +426,73 @@ local function process_command(command)
     local revision = evolution_core.api.get_revision(player)
     if command.type == TYPES.state_requested then
         respond(command, TYPES.state_snapshot, "result", {
-            context = current_context(player, state),
+            context = current_context(state, actor_id),
             respondingTo = command.id,
             revision = revision,
             state = state,
+        })
+        return
+    end
+
+    if command.type == TYPES.timeline_registry_requested then
+        local snapshot, snapshot_code, snapshot_message, snapshot_retryable = evolution_core.timelines.snapshot(command.data.afterRevision)
+        if not snapshot then
+            respond_error(command, snapshot_code, snapshot_message, snapshot_retryable)
+            return
+        end
+        respond(command, TYPES.timeline_registry_snapshot, "result", {
+            context = current_context(state, actor_id),
+            respondingTo = command.id,
+            registryRevision = snapshot.registryRevision,
+            timelines = snapshot.timelines,
+            events = snapshot.events,
+            truncated = snapshot.truncated,
+        })
+        return
+    end
+
+    if command.data.context.realmId ~= state.phase or command.data.context.timelineId ~= state.timeline then
+        respond_error(command, "context_conflict", "realm or timeline does not match current player state", true)
+        return
+    end
+
+    if command.type == TYPES.timeline_create_requested then
+        local result, timeline_code, timeline_message, timeline_retryable = evolution_core.timelines.create(
+            player, actor_id, command.data.newTimelineId,
+            command.data.expectedStateRevision, command.data.expectedRegistryRevision)
+        if not result then
+            respond_error(command, timeline_code, timeline_message, timeline_retryable)
+            return
+        end
+        if evolution_core.refresh_hud then evolution_core.refresh_hud(player) end
+        respond(command, TYPES.timeline_created_v2, "event", {
+            context = current_context(result.state, actor_id),
+            commandId = command.id,
+            parentTimelineId = result.entry.parentTimelineId,
+            newTimelineId = result.entry.timelineId,
+            createdByActorId = actor_id,
+            stateRevision = result.stateRevision,
+            registryRevision = result.registryRevision,
+        })
+        return
+    end
+
+    if command.type == TYPES.timeline_join_requested then
+        local result, timeline_code, timeline_message, timeline_retryable = evolution_core.timelines.join(
+            player, actor_id, command.data.targetTimelineId,
+            command.data.expectedStateRevision, command.data.expectedRegistryRevision)
+        if not result then
+            respond_error(command, timeline_code, timeline_message, timeline_retryable)
+            return
+        end
+        if evolution_core.refresh_hud then evolution_core.refresh_hud(player) end
+        respond(command, TYPES.timeline_joined, "event", {
+            context = current_context(result.state, actor_id),
+            commandId = command.id,
+            fromTimelineId = result.fromTimelineId,
+            toTimelineId = result.toTimelineId,
+            stateRevision = result.stateRevision,
+            registryRevision = result.registryRevision,
         })
         return
     end
@@ -367,11 +502,6 @@ local function process_command(command)
             "expected revision " .. command.data.expectedRevision .. ", current revision is " .. revision, true)
         return
     end
-    if command.data.context.realmId ~= state.phase or command.data.context.timelineId ~= state.timeline then
-        respond_error(command, "context_conflict", "realm or timeline does not match current player state", true)
-        return
-    end
-
     local previous = state
     local result, action_error, event = evolution_core.api.apply_action(player, command.data.actionId)
     if not result then
@@ -381,7 +511,7 @@ local function process_command(command)
     if event.transitioned then evolution_core.realms.enter(player, result.phase) end
     if evolution_core.refresh_hud then evolution_core.refresh_hud(player) end
     revision = evolution_core.api.get_revision(player)
-    local context = current_context(player, result)
+    local context = current_context(result, actor_id)
     respond(command, TYPES.action_applied, "event", {
         context = context,
         commandId = command.id,
@@ -462,8 +592,22 @@ enqueue(make_message(TYPES.hello, "event", {
     adapterId = adapter_id,
     platform = "luanti",
     protocolVersions = { ESIP_VERSION },
-    consumes = { TYPES.action_requested, TYPES.state_requested },
-    produces = { TYPES.action_applied, TYPES.state_snapshot, TYPES.realm_transitioned, TYPES.error },
+    consumes = {
+        TYPES.action_requested,
+        TYPES.state_requested,
+        TYPES.timeline_create_requested,
+        TYPES.timeline_join_requested,
+        TYPES.timeline_registry_requested,
+    },
+    produces = {
+        TYPES.action_applied,
+        TYPES.state_snapshot,
+        TYPES.realm_transitioned,
+        TYPES.timeline_created_v2,
+        TYPES.timeline_joined,
+        TYPES.timeline_registry_snapshot,
+        TYPES.error,
+    },
     maxMessageBytes = MAX_MESSAGE_BYTES,
 }))
 minetest.after(0.5, poll)

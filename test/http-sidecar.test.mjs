@@ -52,6 +52,48 @@ function stateSnapshot({ id = "result-1", sequence = 1, respondingTo = "query-1"
   }, { now: () => NOW })
 }
 
+function timelineCreateRequest({ id = "timeline-create-1", sequence = 20 } = {}) {
+  return createMessage({
+    id,
+    source: CONTROL,
+    target: LUANTI,
+    type: TYPES.TIMELINE_CREATE_REQUESTED,
+    kind: "command",
+    sequence,
+    expiresat: new Date(NOW.getTime() + 30_000).toISOString(),
+    subject: "actor/actor-test",
+    data: {
+      context: { universeId: "universe-1", timelineId: "origin", realmId: "first_3d", actorId: "actor-test" },
+      newTimelineId: "alpha-1",
+      expectedStateRevision: 7,
+      expectedRegistryRevision: 0,
+    },
+  }, { now: () => NOW })
+}
+
+function timelineCreated({ id = "timeline-created-1", sequence = 20, commandId = "timeline-create-1" } = {}) {
+  return createMessage({
+    id,
+    source: LUANTI,
+    target: CONTROL,
+    type: TYPES.TIMELINE_CREATED_V2,
+    kind: "event",
+    sequence,
+    subject: "actor/actor-test",
+    correlationid: commandId,
+    causationid: commandId,
+    data: {
+      context: { universeId: "universe-1", timelineId: "alpha-1", realmId: "first_3d", actorId: "actor-test" },
+      commandId,
+      parentTimelineId: "origin",
+      newTimelineId: "alpha-1",
+      createdByActorId: "actor-test",
+      stateRevision: 8,
+      registryRevision: 1,
+    },
+  }, { now: () => NOW })
+}
+
 async function withSidecar(run, options = {}) {
   let clock = NOW.getTime()
   const sidecar = createHttpSidecar({
@@ -165,4 +207,21 @@ test("HTTP sidecar refuses non-loopback binding and short tokens", () => {
   assert.throws(() => createHttpSidecar({ token: TOKEN, host: "0.0.0.0" }), /host must/)
   assert.throws(() => createHttpSidecar({ token: "short" }), /32-256/)
   assert.throws(() => createHttpSidecar({ token: "x".repeat(32) + "\r\n" }), /URL-safe/)
+})
+
+test("HTTP sidecar leases and completes world timeline commands", async () => {
+  await withSidecar(async ({ api }) => {
+    const queued = await api("/v1/commands", { method: "POST", body: timelineCreateRequest() })
+    assert.equal(queued.response.status, 202)
+    const leased = await api(`/v1/commands?target=${encodeURIComponent(LUANTI)}&limit=4`)
+    assert.equal(leased.payload.messages[0].type, TYPES.TIMELINE_CREATE_REQUESTED)
+
+    const accepted = await api("/v1/messages", { method: "POST", body: timelineCreated() })
+    assert.equal(accepted.response.status, 202)
+    const completed = await api(`/v1/commands?target=${encodeURIComponent(LUANTI)}&limit=4`)
+    assert.equal(completed.payload.messages.length, 0)
+    const results = await api("/v1/results?after=0&limit=10")
+    assert.equal(results.payload.entries[0].message.type, TYPES.TIMELINE_CREATED_V2)
+    assert.equal(results.payload.entries[0].message.data.registryRevision, 1)
+  })
 })

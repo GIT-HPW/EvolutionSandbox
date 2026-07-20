@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-join-requested-v1.schema.json",
+  "title": "Evolution timeline join command v1",
+  "type": "object",
+  "required": ["context", "targetTimelineId", "expectedStateRevision", "expectedRegistryRevision"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true, "realmId": true }, "required": ["actorId", "realmId"] }] },
+    "targetTimelineId": { "$ref": "context.schema.json#/$defs/id" },
+    "expectedStateRevision": { "type": "integer", "minimum": 0 },
+    "expectedRegistryRevision": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-joined-v1.schema.json",
+  "title": "Evolution timeline joined event v1",
+  "type": "object",
+  "required": ["context", "commandId", "fromTimelineId", "toTimelineId", "stateRevision", "registryRevision"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true, "realmId": true }, "required": ["actorId", "realmId"] }] },
+    "commandId": { "$ref": "context.schema.json#/$defs/id" },
+    "fromTimelineId": { "$ref": "context.schema.json#/$defs/id" },
+    "toTimelineId": { "$ref": "context.schema.json#/$defs/id" },
+    "stateRevision": { "type": "integer", "minimum": 0 },
+    "registryRevision": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

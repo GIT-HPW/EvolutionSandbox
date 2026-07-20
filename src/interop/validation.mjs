@@ -79,6 +79,21 @@ function requireState(value, path = "data.state") {
   }
 }
 
+function requireTimelineEntry(value, path) {
+  requireObject(value, path)
+  rejectUnknown(value, ["timelineId", "parentTimelineId", "createdByActorId", "registryRevision"], path)
+  requireId(value.timelineId, `${path}.timelineId`)
+  if (value.parentTimelineId !== undefined) requireId(value.parentTimelineId, `${path}.parentTimelineId`)
+  requireId(value.createdByActorId, `${path}.createdByActorId`)
+  requireInteger(value.registryRevision, `${path}.registryRevision`)
+}
+
+function requireTimelineEntries(value, path, { allowNull = false } = {}) {
+  if (allowNull && value === null) return
+  if (!Array.isArray(value) || value.length > 256) throw new EsipError("invalid_message", `${path} must be an array of at most 256 timelines`)
+  value.forEach((entry, index) => requireTimelineEntry(entry, `${path}[${index}]`))
+}
+
 function validatePayload(message) {
   const data = message.data
   switch (message.type) {
@@ -135,12 +150,54 @@ function validatePayload(message) {
       requireInteger(data.toDimension, "data.toDimension", { max: 1024 })
       requireInteger(data.revision, "data.revision")
       break
+    case "io.evolution.timeline.create.requested.v1":
+      rejectUnknown(data, ["context", "newTimelineId", "expectedStateRevision", "expectedRegistryRevision"], "data")
+      requireContext(data.context, { actor: true, realm: true })
+      requireId(data.newTimelineId, "data.newTimelineId")
+      requireInteger(data.expectedStateRevision, "data.expectedStateRevision")
+      requireInteger(data.expectedRegistryRevision, "data.expectedRegistryRevision")
+      break
     case "io.evolution.timeline.created.v1":
       rejectUnknown(data, ["context", "parentTimelineId", "newTimelineId", "branchRevision"], "data")
       requireContext(data.context, { actor: true, realm: true })
       requireId(data.parentTimelineId, "data.parentTimelineId")
       requireId(data.newTimelineId, "data.newTimelineId")
       requireInteger(data.branchRevision, "data.branchRevision")
+      break
+    case "io.evolution.timeline.created.v2":
+      rejectUnknown(data, ["context", "commandId", "parentTimelineId", "newTimelineId", "createdByActorId", "stateRevision", "registryRevision"], "data")
+      requireContext(data.context, { actor: true, realm: true })
+      for (const key of ["commandId", "parentTimelineId", "newTimelineId", "createdByActorId"]) requireId(data[key], `data.${key}`)
+      requireInteger(data.stateRevision, "data.stateRevision")
+      requireInteger(data.registryRevision, "data.registryRevision")
+      break
+    case "io.evolution.timeline.join.requested.v1":
+      rejectUnknown(data, ["context", "targetTimelineId", "expectedStateRevision", "expectedRegistryRevision"], "data")
+      requireContext(data.context, { actor: true, realm: true })
+      requireId(data.targetTimelineId, "data.targetTimelineId")
+      requireInteger(data.expectedStateRevision, "data.expectedStateRevision")
+      requireInteger(data.expectedRegistryRevision, "data.expectedRegistryRevision")
+      break
+    case "io.evolution.timeline.joined.v1":
+      rejectUnknown(data, ["context", "commandId", "fromTimelineId", "toTimelineId", "stateRevision", "registryRevision"], "data")
+      requireContext(data.context, { actor: true, realm: true })
+      for (const key of ["commandId", "fromTimelineId", "toTimelineId"]) requireId(data[key], `data.${key}`)
+      requireInteger(data.stateRevision, "data.stateRevision")
+      requireInteger(data.registryRevision, "data.registryRevision")
+      break
+    case "io.evolution.timeline.registry.requested.v1":
+      rejectUnknown(data, ["context", "afterRevision"], "data")
+      requireContext(data.context, { actor: true })
+      requireInteger(data.afterRevision, "data.afterRevision")
+      break
+    case "io.evolution.timeline.registry.snapshot.v1":
+      rejectUnknown(data, ["context", "respondingTo", "registryRevision", "timelines", "events", "truncated"], "data")
+      requireContext(data.context, { actor: true, realm: true })
+      requireId(data.respondingTo, "data.respondingTo")
+      requireInteger(data.registryRevision, "data.registryRevision")
+      requireTimelineEntries(data.timelines, "data.timelines")
+      requireTimelineEntries(data.events, "data.events", { allowNull: true })
+      if (typeof data.truncated !== "boolean") throw new EsipError("invalid_message", "data.truncated must be boolean")
       break
     case "io.evolution.error.v1":
       rejectUnknown(data, ["respondingTo", "code", "message", "retryable"], "data")

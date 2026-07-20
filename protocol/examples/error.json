@@ -6,7 +6,7 @@
   "type": "io.evolution.error.v1",
   "kind": "result",
   "time": "2026-07-17T00:00:12.000Z",
-  "subject": "actor/player-42",
+  "subject": "actor/actor-42",
   "target": "esip://web/control-panel",
   "datacontenttype": "application/json",
   "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/error-v1.schema.json",

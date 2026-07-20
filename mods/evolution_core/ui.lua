@@ -15,7 +15,7 @@ function evolution_core.refresh_hud(player)
         player:hud_change(huds[name], "text", text)
     else
         huds[name] = player:hud_add({
-            hud_elem_type = "text",
+            type = "text",
             position = {x = 0.02, y = 0.06},
             offset = {x = 0, y = 0},
             alignment = {x = 1, y = 1},
@@ -48,10 +48,11 @@ function evolution_core.show_panel(player, message)
         end
     end
     if state.phase == "first_3d" then
-        table.insert(formspec, "field[0.6,6.8;5.2,0.8;branch_name;时间线名称;" .. escape(state.timeline) .. "]")
-        table.insert(formspec, "button[6.1,6.8;2.4,0.8;save_branch;保存分支]")
+        table.insert(formspec, "field[0.6,6.8;4.4,0.8;branch_name;世界时间线;" .. escape(state.timeline) .. "]")
+        table.insert(formspec, "button[5.2,6.8;2.0,0.8;save_branch;创建]")
+        table.insert(formspec, "button[7.4,6.8;2.0,0.8;join_branch;加入]")
     end
-    table.insert(formspec, "button[8.7,6.8;2.7,0.8;reset_state;重置个人状态]")
+    table.insert(formspec, "button[9.6,6.8;1.8,0.8;reset_state;重置]")
     table.insert(formspec, "textarea[0.6,7.8;10.8,0.8;;结果;" .. escape(message or "右键领域中的彩色节点也能执行行为。") .. "]")
     minetest.show_formspec(player:get_player_name(), FORMNAME, table.concat(formspec))
 end
@@ -78,8 +79,18 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
         end
     end
     if fields.save_branch then
-        local state, err = evolution_core.api.set_timeline(player, fields.branch_name)
-        message = state and ("时间线已保存：" .. state.timeline) or err
+        local actor_id = evolution_core.identity.actor_for_player(player)
+        local result, _, err = evolution_core.timelines.create(
+            player, actor_id, fields.branch_name,
+            evolution_core.api.get_revision(player), evolution_core.timelines.get_revision())
+        message = result and ("世界时间线已创建：" .. result.state.timeline) or err
+        evolution_core.refresh_hud(player)
+    elseif fields.join_branch then
+        local actor_id = evolution_core.identity.actor_for_player(player)
+        local result, _, err = evolution_core.timelines.join(
+            player, actor_id, fields.branch_name,
+            evolution_core.api.get_revision(player), evolution_core.timelines.get_revision())
+        message = result and ("已加入时间线：" .. result.state.timeline) or err
         evolution_core.refresh_hud(player)
     elseif fields.reset_state then
         local _ok

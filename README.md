@@ -42,7 +42,7 @@ npm run dev
 - 达到阈值后右键黄色维度门触发大爆炸；
 - 输入 `/evo` 可打开同样功能的可点击面板。
 
-状态保存在玩家 metadata 中。重新连接后，阶段、数值和时间线会继续保留。
+玩家状态保存在 metadata 中，时间线注册表保存在世界 mod storage 中。重新连接后，阶段、数值、匿名 actor 身份和世界时间线会继续保留；输入 `/evo identity` 可查看本地 actor ID，`/evo timelines` 可查看注册表。
 
 ## 与现有项目快速组合
 
@@ -85,7 +85,7 @@ npm run runtime:prepare
 npm run sidecar
 ```
 
-另开终端运行 `npm run dev`，玩家进入服务器后可执行 `npm run sidecar:client -- state <玩家名>` 或 `npm run sidecar:client -- action <玩家名> observe`。完整的三终端步骤、Linux 命令和排错见 [跨游戏通信指南](docs/interop.md)。
+另开终端运行 `npm run dev`。玩家进入服务器后先输入 `/evo identity` 获取不透明 actor ID，再执行 `npm run sidecar:client -- state <actor-id>`、`npm run sidecar:client -- timelines <actor-id>` 或 `npm run sidecar:client -- action <actor-id> observe`。完整的三终端步骤、时间线命令、Linux 命令和排错见 [跨游戏通信指南](docs/interop.md)。
 
 ESIP 当前是 `experimental/0.1`：真实 sidecar 强制只监听回环地址，适合本机开发和单机部署，不应直接暴露到公网，也不宣称已经提供生产级持久消息或跨游戏资产事务。完整规范见 [ESIP-0001](protocol/ESIP-0001.md)。
 
@@ -132,11 +132,11 @@ docs/          架构、集成和迭代说明
 
 - “零维”目前是 Luanti 三维空间中的隔离规则领域，并非真正的零维物理模拟。
 - 首版只有原点到首个三维领域，尚未实现 32 维、平行宇宙服务器编排、NPC 或经济系统。
-- 多人共享领域，但每位玩家的演化数值和时间线名称独立保存；时间线的世界级分叉仍在路线图中。
-- ESIP 已完成真实 Luanti 本机 HTTP 往返和可持久恢复的浏览器游戏适配器；Luanti sidecar 队列仍在内存中，跨进程断线恢复和持久事件流尚未实现。
+- 多人共享世界时间线注册表，并可在同一世界创建和加入分支；当前分支只切换玩家上下文，尚不复制地图、资产或玩家数值。
+- 浏览器平台可按注册表 revision 增量追赶时间线事件；Luanti sidecar 的队列与结果游标仍在内存中，sidecar 进程重启后需要重新查询权威快照。
 - 世界文件、玩家数据、模型权重和 API 密钥都不属于源码仓库。
 
-路线优先级是：稳定双平台小闭环 → 多人时间线事件 → 跨平台身份/断线语义 → 持久事件传输 → openVirFactory AI 导演 → G2Reality 坐标领域 → 多世界/多服务器维度。
+路线优先级是：持久事件传输 → openVirFactory AI 导演 → 时间线地图/资产语义 → G2Reality 坐标领域 → 多世界/多服务器维度。
 
 ## 安全与许可证
 

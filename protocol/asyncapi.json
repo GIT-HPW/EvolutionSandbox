@@ -14,7 +14,13 @@
     "stateRequested": { "address": "io.evolution.state.requested.v1", "messages": { "message": { "$ref": "#/components/messages/stateRequested" } } },
     "stateSnapshot": { "address": "io.evolution.state.snapshot.v1", "messages": { "message": { "$ref": "#/components/messages/stateSnapshot" } } },
     "realmTransitioned": { "address": "io.evolution.realm.transitioned.v1", "messages": { "message": { "$ref": "#/components/messages/realmTransitioned" } } },
+    "timelineCreateRequested": { "address": "io.evolution.timeline.create.requested.v1", "messages": { "message": { "$ref": "#/components/messages/timelineCreateRequested" } } },
     "timelineCreated": { "address": "io.evolution.timeline.created.v1", "messages": { "message": { "$ref": "#/components/messages/timelineCreated" } } },
+    "timelineCreatedV2": { "address": "io.evolution.timeline.created.v2", "messages": { "message": { "$ref": "#/components/messages/timelineCreatedV2" } } },
+    "timelineJoinRequested": { "address": "io.evolution.timeline.join.requested.v1", "messages": { "message": { "$ref": "#/components/messages/timelineJoinRequested" } } },
+    "timelineJoined": { "address": "io.evolution.timeline.joined.v1", "messages": { "message": { "$ref": "#/components/messages/timelineJoined" } } },
+    "timelineRegistryRequested": { "address": "io.evolution.timeline.registry.requested.v1", "messages": { "message": { "$ref": "#/components/messages/timelineRegistryRequested" } } },
+    "timelineRegistrySnapshot": { "address": "io.evolution.timeline.registry.snapshot.v1", "messages": { "message": { "$ref": "#/components/messages/timelineRegistrySnapshot" } } },
     "error": { "address": "io.evolution.error.v1", "messages": { "message": { "$ref": "#/components/messages/error" } } }
   },
   "components": {
@@ -25,7 +31,13 @@
       "stateRequested": { "name": "stateRequested", "x-esip-kind": "query", "payload": { "$ref": "./schemas/state-requested-v1.schema.json" } },
       "stateSnapshot": { "name": "stateSnapshot", "x-esip-kind": "result", "payload": { "$ref": "./schemas/state-snapshot-v1.schema.json" } },
       "realmTransitioned": { "name": "realmTransitioned", "x-esip-kind": "event", "payload": { "$ref": "./schemas/realm-transitioned-v1.schema.json" } },
+      "timelineCreateRequested": { "name": "timelineCreateRequested", "x-esip-kind": "command", "payload": { "$ref": "./schemas/timeline-create-requested-v1.schema.json" } },
       "timelineCreated": { "name": "timelineCreated", "x-esip-kind": "event", "payload": { "$ref": "./schemas/timeline-created-v1.schema.json" } },
+      "timelineCreatedV2": { "name": "timelineCreatedV2", "x-esip-kind": "event", "payload": { "$ref": "./schemas/timeline-created-v2.schema.json" } },
+      "timelineJoinRequested": { "name": "timelineJoinRequested", "x-esip-kind": "command", "payload": { "$ref": "./schemas/timeline-join-requested-v1.schema.json" } },
+      "timelineJoined": { "name": "timelineJoined", "x-esip-kind": "event", "payload": { "$ref": "./schemas/timeline-joined-v1.schema.json" } },
+      "timelineRegistryRequested": { "name": "timelineRegistryRequested", "x-esip-kind": "query", "payload": { "$ref": "./schemas/timeline-registry-requested-v1.schema.json" } },
+      "timelineRegistrySnapshot": { "name": "timelineRegistrySnapshot", "x-esip-kind": "result", "payload": { "$ref": "./schemas/timeline-registry-snapshot-v1.schema.json" } },
       "error": { "name": "error", "x-esip-kind": "result", "payload": { "$ref": "./schemas/error-v1.schema.json" } }
     }
   }

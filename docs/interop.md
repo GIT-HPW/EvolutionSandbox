@@ -54,15 +54,18 @@ npm run sidecar
 npm run dev
 ```
 
-进入服务器并保持玩家在线。在第三个终端复用刚才的同一令牌，查询真实玩家状态：
+进入服务器并保持玩家在线，在聊天栏输入 `/evo identity`，复制返回的不透明 actor ID。在第三个终端复用刚才的同一令牌：
 
 ```powershell
 $env:EVOLUTION_ESIP_TOKEN = "<第一个终端中的同一令牌>"
-npm run sidecar:client -- state <玩家名>
-npm run sidecar:client -- action <玩家名> observe
+npm run sidecar:client -- state <actor-id>
+npm run sidecar:client -- action <actor-id> observe
+npm run sidecar:client -- timelines <actor-id>
+npm run sidecar:client -- create-timeline <actor-id> experiment-a
+npm run sidecar:client -- join-timeline <actor-id> origin
 ```
 
-`action` 命令会先查询最新状态和 revision，再发送行为请求；Luanti 执行后返回 `action.applied`。不要把令牌粘贴到 Issue、日志或 shell 历史共享文件中。
+`action` 命令会先查询最新状态和 revision。创建时间线会同时查询玩家状态 revision 与世界 registry revision；加入操作也会先获取最新上下文。Luanti 执行后只返回已确认结果。`timelines <actor-id> <after-revision>` 可请求某个 registry revision 之后的增量事件。不要把令牌或本地 actor 映射粘贴到 Issue、日志或 shell 历史共享文件中。
 
 如果 Luanti 不在系统路径中，官方 Windows 便携包可直接指定其中的 `bin\luanti.exe`：
 
@@ -82,25 +85,26 @@ npm run runtime:prepare
 npm run sidecar
 ```
 
-另开终端运行 `npm run dev`，玩家进入后，在带同一令牌的终端运行：
+另开终端运行 `npm run dev`，玩家进入后输入 `/evo identity`，再在带同一令牌的终端运行：
 
 ```bash
-npm run sidecar:client -- state PLAYER
-npm run sidecar:client -- action PLAYER observe
+npm run sidecar:client -- state ACTOR_ID
+npm run sidecar:client -- action ACTOR_ID observe
+npm run sidecar:client -- timelines ACTOR_ID
 ```
 
 ## 实际消息流程
 
 1. `evolution_bridge` 启动后发布 `capability.hello`。
-2. 控制端向 `POST /v1/commands` 提交带 `expiresat` 的 `state.requested` 或 `action.requested`。
+2. 控制端向 `POST /v1/commands` 提交带 `expiresat` 的状态、行为或时间线 command/query。
 3. sidecar 验证 Bearer 令牌、schema、来源、目标、消息大小、序列和过期时间，然后进入有界内存队列。
 4. Luanti 从 `GET /v1/commands` 领取短租约消息；租约到期但未确认的消息可以重投。
-5. bridge 将 `actorId` 映射为在线玩家，并检查 universe、realm、timeline 和 `expectedRevision`。
-6. `evolution_core.api` 执行固定白名单行为并写回玩家 metadata；每次状态写入都会增加持久 revision。
-7. bridge 向 `POST /v1/messages` 返回 `state.snapshot`、`action.applied`、`realm.transitioned` 或 `error`。
+5. bridge 通过只存在本地的持久身份表将不透明 `actorId` 映射为在线玩家，并检查 universe、realm、timeline 和 revision。
+6. `evolution_core` 执行固定行为，或在 world mod storage 中创建/查询时间线；玩家状态与世界注册表使用独立 revision。
+7. bridge 向 `POST /v1/messages` 返回已确认状态、行为、领域事件、时间线结果/快照或 `error`。
 8. sidecar 完成对应命令；控制端通过 `GET /v1/results?after=<cursor>` 获取结果。
 
-bridge 会在 Luanti mod storage 中保留最近 256 个命令的响应描述。网络重试不会重复执行动作，sidecar 重启后再次投递同一命令时也能重新生成确认结果。
+bridge 会在 Luanti mod storage 中保留最近 256 个命令的内容指纹和响应描述。网络重试不会重复执行动作，sidecar 重启后再次投递相同命令也能重新生成确认结果；同一 `source + id` 的内容发生变化会返回 `id_conflict`。
 
 ## HTTP 绑定
 
@@ -144,18 +148,18 @@ evolution_bridge_url = http://127.0.0.1:7070
 
 - `/esip_status`：需要 Luanti `server` 权限，显示 `connected/waiting` 和待发送数量，不显示令牌。
 - 日志提示 HTTP API unavailable：确认 Luanti 带 cURL，并配置 `secure.http_mods = evolution_bridge`。
-- `actor_offline`：目标玩家必须已进入服务器且保持在线。
-- `revision_conflict`/`context_conflict`：重新运行控制端命令，它会先获取最新快照。
+- `identity_unmapped`/`actor_offline`：先让目标玩家进入服务器并用 `/evo identity` 获取当前 actor ID。
+- `revision_conflict`/`registry_revision_conflict`/`context_conflict`：重新运行控制端命令，它会先获取最新快照。
 - sidecar 返回 401：三个终端使用的令牌不一致。
 - sidecar 连接正常但没有命令：确认 `ESIP_LUANTI_SOURCE` 与 Luanti `evolution_bridge_source` 完全一致。
 
 ## 安全边界与当前限制
 
 - sidecar 是本机开发/单机部署边界，不是公网网关；跨主机必须另加 TLS、独立身份、速率限制和审计。
-- 当前队列、结果游标、source 序列记录保存在 Node 内存中，sidecar 重启后不会恢复；Luanti 玩家状态、revision 和已处理命令缓存会保留。
-- 当前只支持查询状态和执行 7 个无参数 Evolution 行为，不支持任意 Lua、节点批处理、文件读写或数据库导出。
-- `actorId` 当前等于 Luanti 玩家名，不能把消息或结果公开转发到不可信平台。
-- 浏览器游戏适配器已经提供第二种状态权威实现，但尚未建立跨进程断线追赶；完成身份映射、保留期和重放语义前不引入持久 broker。
+- 当前队列、结果游标、source 序列记录保存在 Node 内存中，sidecar 重启后不会恢复；Luanti 玩家状态、身份映射、时间线注册表、revision 和已处理命令缓存会保留。
+- 当前只支持查询状态/时间线、执行 7 个无参数 Evolution 行为和创建/加入时间线，不支持任意 Lua、节点批处理、文件读写或数据库导出。
+- `actorId` 是本地生成的不透明标识；玩家名映射不进入 ESIP，但 actor ID 本身仍应按游戏身份标识保护。跨平台不能仅凭两个 actor ID 字符串相同就合并账户。
+- 浏览器权威适配器支持按 registry revision 追赶最近 256 个时间线事件；Luanti 可返回同样的注册表增量，但 sidecar 传输层尚未持久化游标或主动订阅。
 
 ## Unity、Unreal 或其他游戏
 

@@ -10,7 +10,13 @@ export const TYPES = Object.freeze({
   STATE_REQUESTED: "io.evolution.state.requested.v1",
   STATE_SNAPSHOT: "io.evolution.state.snapshot.v1",
   REALM_TRANSITIONED: "io.evolution.realm.transitioned.v1",
+  TIMELINE_CREATE_REQUESTED: "io.evolution.timeline.create.requested.v1",
   TIMELINE_CREATED: "io.evolution.timeline.created.v1",
+  TIMELINE_CREATED_V2: "io.evolution.timeline.created.v2",
+  TIMELINE_JOIN_REQUESTED: "io.evolution.timeline.join.requested.v1",
+  TIMELINE_JOINED: "io.evolution.timeline.joined.v1",
+  TIMELINE_REGISTRY_REQUESTED: "io.evolution.timeline.registry.requested.v1",
+  TIMELINE_REGISTRY_SNAPSHOT: "io.evolution.timeline.registry.snapshot.v1",
   ERROR: "io.evolution.error.v1",
 })
 
@@ -21,7 +27,13 @@ export const MESSAGE_DEFINITIONS = Object.freeze({
   [TYPES.STATE_REQUESTED]: { kind: "query", schema: "state-requested-v1.schema.json" },
   [TYPES.STATE_SNAPSHOT]: { kind: "result", schema: "state-snapshot-v1.schema.json" },
   [TYPES.REALM_TRANSITIONED]: { kind: "event", schema: "realm-transitioned-v1.schema.json" },
+  [TYPES.TIMELINE_CREATE_REQUESTED]: { kind: "command", schema: "timeline-create-requested-v1.schema.json" },
   [TYPES.TIMELINE_CREATED]: { kind: "event", schema: "timeline-created-v1.schema.json" },
+  [TYPES.TIMELINE_CREATED_V2]: { kind: "event", schema: "timeline-created-v2.schema.json" },
+  [TYPES.TIMELINE_JOIN_REQUESTED]: { kind: "command", schema: "timeline-join-requested-v1.schema.json" },
+  [TYPES.TIMELINE_JOINED]: { kind: "event", schema: "timeline-joined-v1.schema.json" },
+  [TYPES.TIMELINE_REGISTRY_REQUESTED]: { kind: "query", schema: "timeline-registry-requested-v1.schema.json" },
+  [TYPES.TIMELINE_REGISTRY_SNAPSHOT]: { kind: "result", schema: "timeline-registry-snapshot-v1.schema.json" },
   [TYPES.ERROR]: { kind: "result", schema: "error-v1.schema.json" },
 })
 

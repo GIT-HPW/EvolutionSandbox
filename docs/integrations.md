@@ -22,7 +22,7 @@ openVirFactory 是可选的 AI/自动化控制层，不是启动 EvolutionSandbo
 
 ## 浏览器沙盒
 
-浏览器页面是独立游戏状态权威端，不是 Luanti 玩家数据库的网页镜像。它通过 ESIP 处理行为、状态查询和时间线事件，并把非敏感游戏状态保存到 localStorage。浏览器不会直接调用 Luanti sidecar；若未来需要浏览器与 Luanti 跨进程通信，应由同源后端或专用网关终止身份验证，不能为方便而给当前回环 sidecar 增加宽松 CORS。
+浏览器页面是独立游戏状态权威端，不是 Luanti 玩家数据库的网页镜像。它通过 ESIP 处理行为、状态查询、世界时间线创建/加入及注册表增量追赶，并把非敏感游戏状态和显式 source → actor 映射保存到 localStorage。浏览器不会直接调用 Luanti sidecar；不同平台的 actor ID 也不能仅凭字符串相同就自动合并。若未来需要浏览器与 Luanti 跨进程通信，应由同源后端或专用网关完成认证和明确的身份绑定，不能为方便而给当前回环 sidecar 增加宽松 CORS。
 
 ## G2Reality 与 SportX
 

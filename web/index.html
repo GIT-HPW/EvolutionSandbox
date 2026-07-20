@@ -38,8 +38,10 @@
       <section id="timeline-panel" class="timeline" hidden aria-labelledby="timeline-title">
         <h2 id="timeline-title">建立时间线分支</h2>
         <div class="timeline-form">
-          <input id="timeline-name" maxlength="32" value="alpha-1" aria-label="时间线名称">
-          <button id="branch" type="button">保存分支</button>
+          <input id="timeline-name" maxlength="32" value="alpha-1" list="timeline-options" aria-label="时间线名称">
+          <datalist id="timeline-options"></datalist>
+          <button id="branch" type="button">创建分支</button>
+          <button id="join" type="button">加入已有</button>
         </div>
       </section>
 

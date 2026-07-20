@@ -1,0 +1,26 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "command-timeline-join-1",
+  "source": "esip://local/second-control",
+  "target": "esip://luanti/world-alpha",
+  "type": "io.evolution.timeline.join.requested.v1",
+  "kind": "command",
+  "time": "2026-07-17T00:00:14.000Z",
+  "subject": "actor/actor-77",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-join-requested-v1.schema.json",
+  "sequence": 3,
+  "expiresat": "2026-07-17T00:01:14.000Z",
+  "data": {
+    "context": {
+      "universeId": "universe-1",
+      "timelineId": "origin",
+      "realmId": "first_3d",
+      "actorId": "actor-77"
+    },
+    "targetTimelineId": "alpha-1",
+    "expectedStateRevision": 7,
+    "expectedRegistryRevision": 1
+  }
+}

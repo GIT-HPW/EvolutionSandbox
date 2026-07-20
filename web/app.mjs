@@ -27,6 +27,8 @@ const labels = { energy: "能量", information: "信息", entropy: "熵", stabil
 const pending = new Map()
 let state
 let revision = 0
+let registryRevision = 0
+let registryTimelines = []
 let busy = true
 let game
 let control
@@ -50,7 +52,7 @@ function render() {
     actions.replaceChildren()
     return
   }
-  badge.textContent = `${currentPhase.title} · ${state.dimension}D · r${revision}`
+  badge.textContent = `${currentPhase.title} · ${state.dimension}D · r${revision} / tr${registryRevision}`
   objective.textContent = currentPhase.objective
   stats.replaceChildren(...Object.entries(labels).map(([key, label]) => {
     const item = document.createElement("div")
@@ -78,12 +80,20 @@ function render() {
   }))
   timelinePanel.hidden = state.phase !== "first_3d"
   document.querySelector("#branch").disabled = busy
+  document.querySelector("#join").disabled = busy
   document.querySelector("#reset").disabled = busy
+  const options = document.querySelector("#timeline-options")
+  options.replaceChildren(...registryTimelines.map((entry) => {
+    const option = document.createElement("option")
+    option.value = entry.timelineId
+    return option
+  }))
 }
 
 function responseId(message) {
   if (message.type === TYPES.ACTION_APPLIED) return message.data.commandId
-  if (message.type === TYPES.STATE_SNAPSHOT || message.type === TYPES.ERROR) return message.data.respondingTo
+  if (message.type === TYPES.TIMELINE_CREATED_V2 || message.type === TYPES.TIMELINE_JOINED) return message.data.commandId
+  if (message.type === TYPES.STATE_SNAPSHOT || message.type === TYPES.TIMELINE_REGISTRY_SNAPSHOT || message.type === TYPES.ERROR) return message.data.respondingTo
 }
 
 function currentContext() {
@@ -147,6 +157,49 @@ async function applyRequestedAction(actionId, parameters = {}) {
   }
 }
 
+async function refreshRegistry(afterRevision = 0) {
+  const message = await request(TYPES.TIMELINE_REGISTRY_REQUESTED, "query", {
+    context: currentContext(),
+    afterRevision,
+  })
+  if (message.type === TYPES.ERROR) throw new Error(`${message.data.code}：${message.data.message}`)
+  registryRevision = message.data.registryRevision
+  registryTimelines = message.data.timelines
+  return message
+}
+
+async function changeTimeline(kind, timelineId) {
+  busy = true
+  render()
+  try {
+    const creating = kind === "create"
+    const message = await request(
+      creating ? TYPES.TIMELINE_CREATE_REQUESTED : TYPES.TIMELINE_JOIN_REQUESTED,
+      "command",
+      {
+        context: currentContext(),
+        ...(creating ? { newTimelineId: timelineId } : { targetTimelineId: timelineId }),
+        expectedStateRevision: revision,
+        expectedRegistryRevision: registryRevision,
+      },
+    )
+    if (message.type === TYPES.ERROR) {
+      addLog(`${message.data.code}：${message.data.message}`, true)
+      return
+    }
+    state = { ...state, timeline: message.data.context.timelineId }
+    revision = message.data.stateRevision
+    registryRevision = message.data.registryRevision
+    addLog(creating ? `世界时间线已创建：${state.timeline}` : `已加入世界时间线：${state.timeline}`)
+    await refreshRegistry(Math.max(0, registryRevision - 1))
+  } catch (error) {
+    addLog(error.message, true)
+  } finally {
+    busy = false
+    render()
+  }
+}
+
 function readControlSequence() {
   const raw = localStorage.getItem(CONTROL_SEQUENCE_KEY)
   if (raw === null) return 0
@@ -165,13 +218,28 @@ async function start() {
     id: "browser-control",
     source: CONTROL_SOURCE,
     platform: "browser-ui",
-    consumes: [TYPES.ACTION_APPLIED, TYPES.STATE_SNAPSHOT, TYPES.REALM_TRANSITIONED, TYPES.TIMELINE_CREATED, TYPES.ERROR],
-    produces: [TYPES.ACTION_REQUESTED, TYPES.STATE_REQUESTED],
+    consumes: [
+      TYPES.ACTION_APPLIED,
+      TYPES.STATE_SNAPSHOT,
+      TYPES.REALM_TRANSITIONED,
+      TYPES.TIMELINE_CREATED_V2,
+      TYPES.TIMELINE_JOINED,
+      TYPES.TIMELINE_REGISTRY_SNAPSHOT,
+      TYPES.ERROR,
+    ],
+    produces: [
+      TYPES.ACTION_REQUESTED,
+      TYPES.STATE_REQUESTED,
+      TYPES.TIMELINE_CREATE_REQUESTED,
+      TYPES.TIMELINE_JOIN_REQUESTED,
+      TYPES.TIMELINE_REGISTRY_REQUESTED,
+    ],
     initialSequence: readControlSequence(),
     sequenceChanged: (nextSequence) => localStorage.setItem(CONTROL_SEQUENCE_KEY, String(nextSequence)),
     handle: async (message) => {
       if (message.type === TYPES.REALM_TRANSITIONED) addLog(`阶段跃迁完成：${message.data.fromRealm} → ${message.data.toRealm}`)
-      if (message.type === TYPES.TIMELINE_CREATED) addLog(`时间线已确认：${message.data.newTimelineId}`)
+      if (message.type === TYPES.TIMELINE_CREATED_V2) addLog(`时间线注册事件已确认：${message.data.newTimelineId}`)
+      if (message.type === TYPES.TIMELINE_JOINED) addLog(`时间线加入事件已确认：${message.data.toTimelineId}`)
       const id = responseId(message)
       if (id) pending.get(id)?.resolve(message)
     },
@@ -185,6 +253,7 @@ async function start() {
   if (snapshot.type === TYPES.ERROR) throw new Error(`${snapshot.data.code}：${snapshot.data.message}`)
   state = snapshot.data.state
   revision = snapshot.data.revision
+  await refreshRegistry(0)
   busy = false
   addLog(revision === 0 ? "原始能量信息体苏醒。先尝试观察混沌。" : `已从浏览器本地存档恢复 revision ${revision}。`)
   render()
@@ -206,7 +275,11 @@ document.querySelector("#reset").addEventListener("click", () => {
 })
 
 document.querySelector("#branch").addEventListener("click", () => {
-  if (!busy) applyRequestedAction("branch_timeline", { name: document.querySelector("#timeline-name").value })
+  if (!busy) changeTimeline("create", document.querySelector("#timeline-name").value)
+})
+
+document.querySelector("#join").addEventListener("click", () => {
+  if (!busy) changeTimeline("join", document.querySelector("#timeline-name").value)
 })
 
 render()

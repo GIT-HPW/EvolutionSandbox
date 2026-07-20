@@ -6,12 +6,21 @@ import { EsipError } from "./errors.mjs"
 import { TYPES } from "./message-types.mjs"
 import { validateMessage } from "./validation.mjs"
 
-const COMMAND_TYPES = new Set([TYPES.ACTION_REQUESTED, TYPES.STATE_REQUESTED])
+const COMMAND_TYPES = new Set([
+  TYPES.ACTION_REQUESTED,
+  TYPES.STATE_REQUESTED,
+  TYPES.TIMELINE_CREATE_REQUESTED,
+  TYPES.TIMELINE_JOIN_REQUESTED,
+  TYPES.TIMELINE_REGISTRY_REQUESTED,
+])
 const LUANTI_TYPES = new Set([
   TYPES.CAPABILITY_HELLO,
   TYPES.ACTION_APPLIED,
   TYPES.STATE_SNAPSHOT,
   TYPES.REALM_TRANSITIONED,
+  TYPES.TIMELINE_CREATED_V2,
+  TYPES.TIMELINE_JOINED,
+  TYPES.TIMELINE_REGISTRY_SNAPSHOT,
   TYPES.ERROR,
 ])
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "::1"])
@@ -106,8 +115,8 @@ function writeJson(response, status, body) {
 }
 
 function respondingTo(message) {
-  if (message.type === TYPES.ACTION_APPLIED) return message.data.commandId
-  if (message.type === TYPES.STATE_SNAPSHOT || message.type === TYPES.ERROR) return message.data.respondingTo
+  if ([TYPES.ACTION_APPLIED, TYPES.TIMELINE_CREATED_V2, TYPES.TIMELINE_JOINED].includes(message.type)) return message.data.commandId
+  if ([TYPES.STATE_SNAPSHOT, TYPES.TIMELINE_REGISTRY_SNAPSHOT, TYPES.ERROR].includes(message.type)) return message.data.respondingTo
   return undefined
 }
 
@@ -200,7 +209,7 @@ export class HttpSidecar {
   enqueueCommand(rawMessage) {
     const message = validateMessage(clone(rawMessage), { now: this.now() })
     if (!COMMAND_TYPES.has(message.type) || (message.kind !== "command" && message.kind !== "query")) {
-      throw new EsipError("forbidden", "only action commands and state queries may enter the Luanti queue")
+      throw new EsipError("forbidden", "only declared Evolution commands and queries may enter the Luanti queue")
     }
     if (!this.allowedCommandSources.has(message.source)) throw new EsipError("forbidden", "command source is not allowed")
     if (message.target !== this.luantiSource) throw new EsipError("forbidden", "command target is not the configured Luanti source")

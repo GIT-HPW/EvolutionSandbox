@@ -1,0 +1,30 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "event-timeline-v2-1",
+  "source": "esip://luanti/world-alpha",
+  "target": "esip://local/control",
+  "type": "io.evolution.timeline.created.v2",
+  "kind": "event",
+  "time": "2026-07-17T00:00:13.000Z",
+  "subject": "actor/actor-42",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-created-v2.schema.json",
+  "sequence": 12,
+  "correlationid": "command-timeline-create-1",
+  "causationid": "command-timeline-create-1",
+  "data": {
+    "context": {
+      "universeId": "universe-1",
+      "timelineId": "alpha-1",
+      "realmId": "first_3d",
+      "actorId": "actor-42"
+    },
+    "commandId": "command-timeline-create-1",
+    "parentTimelineId": "origin",
+    "newTimelineId": "alpha-1",
+    "createdByActorId": "actor-42",
+    "stateRevision": 8,
+    "registryRevision": 1
+  }
+}

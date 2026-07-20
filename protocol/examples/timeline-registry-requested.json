@@ -1,0 +1,24 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "query-timeline-registry-1",
+  "source": "esip://local/control",
+  "target": "esip://luanti/world-alpha",
+  "type": "io.evolution.timeline.registry.requested.v1",
+  "kind": "query",
+  "time": "2026-07-17T00:00:16.000Z",
+  "subject": "actor/actor-42",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/timeline-registry-requested-v1.schema.json",
+  "sequence": 14,
+  "expiresat": "2026-07-17T00:01:16.000Z",
+  "data": {
+    "context": {
+      "universeId": "universe-1",
+      "timelineId": "alpha-1",
+      "realmId": "first_3d",
+      "actorId": "actor-42"
+    },
+    "afterRevision": 0
+  }
+}
