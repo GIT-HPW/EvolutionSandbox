@@ -2,9 +2,12 @@
 
 ## Unreleased
 
+## 0.3.0 - 2026-07-20
+
 - 增加真实的 Luanti `evolution_bridge` ↔ Node ESIP sidecar 本机 HTTP 闭环。
 - 增加 Bearer 令牌、回环地址限制、消息大小/来源/目标白名单、命令过期、revision 和幂等保护。
 - 增加命令租约重投、结果游标查询、控制端 CLI、运行时 opt-in 安装和端到端 HTTP 测试。
+- 兼容官方 Windows 便携包中的 `luanti.exe`，启动时自动启用专用服务器模式。
 
 ## 0.2.0 - 2026-07-17
 

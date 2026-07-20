@@ -34,7 +34,7 @@ npm run runtime:prepare
 npm run dev
 ```
 
-如果系统找不到服务器程序，设置 `LUANTI_SERVER_BIN` 为 `luantiserver`/`luantiserver.exe` 的完整路径。连接本地服务器后会进入隔离的零维领域：
+如果系统找不到服务器程序，设置 `LUANTI_SERVER_BIN` 为可执行文件的完整路径。官方 Windows 便携包可指定 `bin\luanti.exe`；Linux 服务端构建通常指定 `luantiserver`。启动脚本会在使用 `luanti`/`luanti.exe` 时自动加入 `--server`。连接本地服务器后会进入隔离的零维领域：
 
 - 右键紫色核心观察混沌；
 - 右键红色撕裂场产生碎片与熵；

@@ -2,14 +2,16 @@
 
 import { spawn } from "node:child_process"
 import { prepareRuntime } from "./prepare-runtime.mjs"
+import { buildLuantiServerArgs } from "./luanti-command.mjs"
 
 const runtime = await prepareRuntime()
-const server = spawn(runtime.luantiBinary, [
+const serverArgs = buildLuantiServerArgs(runtime.luantiBinary, [
   "--world", runtime.worldDir,
   "--config", runtime.configPath,
   "--gameid", runtime.gameId,
   "--port", runtime.luantiPort,
-], {
+])
+const server = spawn(runtime.luantiBinary, serverArgs, {
   cwd: runtime.root,
   stdio: ["ignore", "inherit", "inherit"],
   env: process.env,

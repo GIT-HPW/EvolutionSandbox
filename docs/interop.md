@@ -62,12 +62,14 @@ npm run sidecar:client -- action <玩家名> observe
 
 `action` 命令会先查询最新状态和 revision，再发送行为请求；Luanti 执行后返回 `action.applied`。不要把令牌粘贴到 Issue、日志或 shell 历史共享文件中。
 
-如果 Luanti 不在系统路径中：
+如果 Luanti 不在系统路径中，官方 Windows 便携包可直接指定其中的 `bin\luanti.exe`：
 
 ```powershell
-$env:LUANTI_SERVER_BIN = "C:\path\to\luantiserver.exe"
+$env:LUANTI_SERVER_BIN = "C:\path\to\luanti-5.x.x-win64\bin\luanti.exe"
 npm run dev
 ```
+
+启动脚本会为 `luanti.exe` 自动加入 `--server`；如果使用单独构建的 `luantiserver.exe`，则不会重复添加该参数。
 
 ## Linux / macOS 快速上手
 
