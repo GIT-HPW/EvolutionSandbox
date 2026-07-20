@@ -11,6 +11,18 @@ await rm(site, { recursive: true, force: true })
 await mkdir(site, { recursive: true })
 await cp(resolve(root, "web"), site, { recursive: true })
 await cp(resolve(root, "src", "rules-engine.mjs"), resolve(site, "rules-engine.mjs"))
+await mkdir(resolve(site, "interop"), { recursive: true })
+for (const file of [
+  "adapter.mjs",
+  "browser-game-adapter.mjs",
+  "envelope.mjs",
+  "errors.mjs",
+  "message-types.mjs",
+  "router.mjs",
+  "validation.mjs",
+]) {
+  await cp(resolve(root, "src", "interop", file), resolve(site, "interop", file))
+}
 await cp(resolve(root, "content", "chapters", "origin.json"), resolve(site, "origin.json"))
 await mkdir(resolve(site, "esip"), { recursive: true })
 await cp(resolve(root, "protocol", "schemas"), resolve(site, "esip", "schemas"), { recursive: true })

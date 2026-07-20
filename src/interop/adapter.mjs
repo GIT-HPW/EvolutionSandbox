@@ -24,6 +24,7 @@ export class EsipAdapter {
     handle = async () => {},
     maxMessageBytes = 64 * 1024,
     initialSequence = 0,
+    sequenceChanged = () => {},
     definitions = MESSAGE_DEFINITIONS,
   }) {
     if (typeof id !== "string" || typeof source !== "string" || typeof platform !== "string") {
@@ -32,6 +33,8 @@ export class EsipAdapter {
     validatePatterns(consumes, "consumes")
     validatePatterns(produces, "produces")
     if (typeof handle !== "function") throw new TypeError("handle must be a function")
+    if (!Number.isSafeInteger(initialSequence) || initialSequence < 0) throw new TypeError("initialSequence must be a non-negative integer")
+    if (typeof sequenceChanged !== "function") throw new TypeError("sequenceChanged must be a function")
     this.id = id
     this.source = source
     this.platform = platform
@@ -40,6 +43,7 @@ export class EsipAdapter {
     this.handle = handle
     this.maxMessageBytes = maxMessageBytes
     this.#sequence = initialSequence
+    this.sequenceChanged = sequenceChanged
     this.definitions = definitions
   }
 
@@ -75,6 +79,7 @@ export class EsipAdapter {
     const allowed = options.allowInternal || this.produces.some((pattern) => typeMatches(pattern, type))
     if (!allowed) throw new EsipError("capability_violation", `${this.id} did not declare production of ${type}`)
     const sequence = this.#sequence++
+    await this.sequenceChanged(this.#sequence)
     const message = createMessage({
       ...options,
       source: this.source,

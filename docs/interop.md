@@ -21,6 +21,8 @@ npm run demo:interop
 
 这个演示不开放网络端口，在同一 Node 进程中验证 schema、权限、目标、revision、幂等和序列。
 
+GitHub Pages 上的浏览器游戏是第二个实际平台实现：UI 控制适配器只发 ESIP command/query，游戏权威适配器验证并持久化已确认状态。它使用同页 MemoryRouter，不连接 Luanti 的认证 sidecar。完整说明见 [浏览器 ESIP 平台](browser-platform.md)。
+
 真实闭环由以下组件组成：
 
 - `src/interop/http-sidecar.mjs`：只监听回环地址的认证 HTTP sidecar；
@@ -153,7 +155,7 @@ evolution_bridge_url = http://127.0.0.1:7070
 - 当前队列、结果游标、source 序列记录保存在 Node 内存中，sidecar 重启后不会恢复；Luanti 玩家状态、revision 和已处理命令缓存会保留。
 - 当前只支持查询状态和执行 7 个无参数 Evolution 行为，不支持任意 Lua、节点批处理、文件读写或数据库导出。
 - `actorId` 当前等于 Luanti 玩家名，不能把消息或结果公开转发到不可信平台。
-- 真实第二游戏平台尚未接入；在完成第二个适配器前不引入持久 broker。
+- 浏览器游戏适配器已经提供第二种状态权威实现，但尚未建立跨进程断线追赶；完成身份映射、保留期和重放语义前不引入持久 broker。
 
 ## Unity、Unreal 或其他游戏
 
