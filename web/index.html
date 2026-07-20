@@ -12,46 +12,89 @@
   </head>
   <body>
     <main>
-      <header>
-        <p class="eyebrow">EVOLUTION / ESIP BROWSER PLATFORM 0.1</p>
-        <h1>原点演化实验</h1>
-        <p class="lead">你是零维混沌体中的原始能量信息体。所有行为先成为经过校验的 ESIP 命令，再由浏览器权威适配器修改持久状态；当认知和熵越过阈值，首个三维领域将出现。</p>
+      <header class="hero">
+        <div class="hero-copy">
+          <div class="hero-title">
+            <p class="eyebrow">EVOLUTION / ESIP BROWSER PLATFORM 0.1</p>
+            <h1>原点演化实验</h1>
+          </div>
+          <div class="hero-intro">
+            <div class="protocol-note">
+              <span aria-hidden="true"></span>
+              画面只呈现 ESIP 权威端已确认的状态
+            </div>
+          </div>
+        </div>
+        <div class="experience-layout">
+          <figure class="scene-shell" data-phase="loading" aria-labelledby="scene-caption">
+            <canvas id="universe-scene" role="img" aria-label="实时渲染的动漫风能量宇宙：能量核心、时间环与星尘会随游戏状态变化">
+              当前浏览器无法显示 WebGL 3D 场景，但不影响规则演示。
+            </canvas>
+            <div class="narrative-board" aria-hidden="true">
+              <div class="narrative-head">
+                <span>EVOLUTION MESSAGE SEQUENCE</span>
+                <span class="narrative-live">LIVE</span>
+              </div>
+              <ol id="narrative-stream" class="narrative-stream">
+                <li data-sequence="000">你是零维混沌体中的原始能量信息体。每一次观察、撕裂与融合，都会在实时宇宙中留下痕迹。</li>
+              </ol>
+            </div>
+            <div class="scene-chrome" aria-hidden="true">
+              <span class="corner corner-a"></span>
+              <span class="corner corner-b"></span>
+              <span class="axis axis-x">X</span>
+              <span class="axis axis-y">Y</span>
+              <span class="axis axis-z">Z</span>
+            </div>
+            <div class="scene-readout">
+              <span id="scene-status">3D CORE / LOADING</span>
+              <span>REALTIME STATE VISUALIZER</span>
+            </div>
+            <figcaption id="scene-caption">正在同步浏览器宇宙状态……</figcaption>
+          </figure>
+
+          <section class="action-panel" aria-labelledby="actions-title">
+            <div class="section-title">
+              <h2 id="actions-title">可执行行为</h2>
+              <button id="reset" class="quiet" type="button">重开</button>
+            </div>
+            <p id="action-feedback" class="action-feedback" role="status" aria-live="polite">选择一个行为，结果会在这里立即显示。</p>
+            <div id="actions" class="actions"></div>
+          </section>
+        </div>
       </header>
 
-      <section class="state" aria-labelledby="state-title">
-        <div class="section-title">
-          <h2 id="state-title">当前宇宙状态</h2>
-          <span id="phase-badge">载入中</span>
-        </div>
-        <div id="stats" class="stats" aria-live="polite"></div>
-        <p id="objective" class="objective"></p>
-      </section>
+      <div class="control-layout">
+        <div class="control-main">
+          <section class="state" aria-labelledby="state-title">
+            <div class="section-title">
+              <h2 id="state-title">当前宇宙状态</h2>
+              <span id="phase-badge">载入中</span>
+            </div>
+            <div id="stats" class="stats" aria-live="polite"></div>
+            <p id="objective" class="objective"></p>
+          </section>
 
-      <section aria-labelledby="actions-title">
-        <div class="section-title">
-          <h2 id="actions-title">可执行行为</h2>
-          <button id="reset" class="quiet" type="button">本地重开</button>
-        </div>
-        <div id="actions" class="actions"></div>
-      </section>
+          <section id="timeline-panel" class="timeline" hidden aria-labelledby="timeline-title">
+            <h2 id="timeline-title">建立时间线分支</h2>
+            <div class="timeline-form">
+              <input id="timeline-name" maxlength="32" value="alpha-1" list="timeline-options" aria-label="时间线名称">
+              <datalist id="timeline-options"></datalist>
+              <button id="branch" type="button">创建分支</button>
+              <button id="join" type="button">加入已有</button>
+            </div>
+          </section>
 
-      <section id="timeline-panel" class="timeline" hidden aria-labelledby="timeline-title">
-        <h2 id="timeline-title">建立时间线分支</h2>
-        <div class="timeline-form">
-          <input id="timeline-name" maxlength="32" value="alpha-1" list="timeline-options" aria-label="时间线名称">
-          <datalist id="timeline-options"></datalist>
-          <button id="branch" type="button">创建分支</button>
-          <button id="join" type="button">加入已有</button>
+          <section aria-labelledby="log-title">
+            <h2 id="log-title">事件记录</h2>
+            <ol id="log" class="log" aria-live="polite"></ol>
+          </section>
         </div>
-      </section>
 
-      <section aria-labelledby="log-title">
-        <h2 id="log-title">事件记录</h2>
-        <ol id="log" class="log" aria-live="polite"></ol>
-      </section>
+      </div>
 
       <footer>
-        <p>此页面和 Luanti 模组共用同一内容包、确定性规则和 ESIP 语义。浏览器状态只保存在本站点 localStorage；不读取世界文件，也不保存 API 密钥。</p>
+        <p>此页面和 Luanti 模组共用同一内容包、确定性规则和 ESIP 语义。3D 场景由本地 WebGL shader 实时生成，不上传状态或加载远程素材；浏览器存档只保存在本站点 localStorage。</p>
         <a href="https://github.com/GIT-HPW/EvolutionSandbox">查看源码与 Luanti 版本</a>
         <span aria-hidden="true"> · </span>
         <a href="esip/asyncapi.json">ESIP 0.1 AsyncAPI</a>

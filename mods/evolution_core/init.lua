@@ -19,4 +19,4 @@ for _, file in ipairs({
     dofile(modpath .. "/" .. file)
 end
 
-minetest.log("action", "[evolution_core] playable origin loop 0.4.0 loaded")
+minetest.log("action", "[evolution_core] playable origin loop 0.5.0 loaded")
