@@ -19,6 +19,6 @@ content/chapters/*.json
 
 浏览器平台与 Luanti 平台分别拥有自己的状态权威。浏览器适配器把多 actor 状态、身份映射、世界时间线注册表、revision、事件历史、序列和最近命令响应保存在 localStorage；Luanti 层把玩家状态和匿名 actor ID 保存在 metadata，把身份映射及时间线注册表保存在 world mod storage，并负责领域、节点和交互界面。两者都不改写章节源，也不访问外部模型。外部 AI 只能经过 openVirFactory 的认证结构化桥，并受命令类型、节点前缀、坐标、批量大小和 metadata 白名单限制。
 
-ESIP 位于引擎与传输之间。`src/interop/` 提供消息验证、能力适配器、内存参考路由器和本机 HTTP sidecar；`evolution_bridge` 只把经过双重验证的状态查询与固定行为映射到 `evolution_core.api`。`protocol/` 提供独立 schema 和 AsyncAPI。ESIP 不拥有游戏状态，每一份可变状态仍由一个明确平台负责最终写入。
+ESIP 位于引擎与传输之间。`src/interop/` 提供消息验证、能力适配器、内存参考路由器和本机 HTTP sidecar；正式 sidecar 默认使用带 schema、连续 revision 和校验值的本地 journal/checkpoint 存储，重启后恢复命令、租约、sequence、去重记录、结果和 cursor。`evolution_bridge` 只把经过双重验证的状态查询与固定行为映射到 `evolution_core.api`。`protocol/` 提供独立 schema 和 AsyncAPI。ESIP 不拥有游戏状态，每一份可变状态仍由一个明确平台负责最终写入。
 
 演化数值归属于 actor，时间线目录和领域布局归属于世界。创建时间线同时检查玩家状态 revision 与世界注册表 revision，加入时间线检查两者；权威端负责协调对应存储，Luanti 若在写入间意外中断，会在玩家下次进入时把有效的旧玩家时间线补登记到世界注册表。浏览器旧存档会显式迁移到 schema 2，Luanti 旧玩家时间线也使用同一补登记路径。后续改变既有语义时仍必须发布新 schema 版本和显式迁移。

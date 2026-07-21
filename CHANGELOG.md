@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- 增加 `SidecarStore` 抽象、内存测试实现和本地 journal/checkpoint 持久实现。
+- sidecar 默认在 `runtime/sidecar/` 持久化命令、租约、尝试次数、去重、source sequence、结果和单调 cursor。
+- checkpoint 与 journal 使用版本化 schema、连续 revision 和校验值；损坏、记录缺口或世界绑定冲突时失败关闭。
+- 增加认证诊断接口和 `sidecar:client diagnostics`，以及入队、租约、结果三个中断点的重启恢复测试。
+
 ## 0.5.0 - 2026-07-20
 
 - 增加自包含的动漫风 WebGL 3D 宇宙场景，随 ESIP 已确认状态、行为和时间线切换实时变化。

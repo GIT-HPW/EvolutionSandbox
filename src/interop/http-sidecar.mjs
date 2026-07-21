@@ -4,6 +4,7 @@ import { timingSafeEqual } from "node:crypto"
 import { createServer } from "node:http"
 import { EsipError } from "./errors.mjs"
 import { TYPES } from "./message-types.mjs"
+import { MemorySidecarStore, SidecarStore } from "./sidecar-store.mjs"
 import { validateMessage } from "./validation.mjs"
 
 const COMMAND_TYPES = new Set([
@@ -64,6 +65,12 @@ function parseBoundedInteger(value, fallback, { min, max }) {
   return number
 }
 
+function requireIntegerOption(value, name, { min, max }) {
+  if (!Number.isSafeInteger(value) || value < min || value > max) {
+    throw new TypeError(`${name} must be an integer between ${min} and ${max}`)
+  }
+}
+
 function bearerMatches(header, token) {
   if (typeof header !== "string" || !header.startsWith("Bearer ")) return false
   const provided = Buffer.from(header.slice(7), "utf8")
@@ -122,12 +129,6 @@ function respondingTo(message) {
 
 export class HttpSidecar {
   #server
-  #seen = new Map()
-  #lastSequence = new Map()
-  #commandIds = new Map()
-  #commands = new Map()
-  #results = []
-  #cursor = 0
 
   constructor({
     token,
@@ -143,6 +144,7 @@ export class HttpSidecar {
     leaseMs = 5000,
     maxCommandTtlMs = 60_000,
     now = () => Date.now(),
+    store = new MemorySidecarStore(),
   } = {}) {
     if (typeof token !== "string" || !TOKEN_PATTERN.test(token)) {
       throw new TypeError("token must contain 32-256 URL-safe ASCII characters")
@@ -152,11 +154,19 @@ export class HttpSidecar {
     if (!Array.isArray(allowedCommandSources) || allowedCommandSources.length === 0) {
       throw new TypeError("allowedCommandSources must not be empty")
     }
+    requireIntegerOption(maxMessageBytes, "maxMessageBytes", { min: 1024, max: 4 * 1024 * 1024 })
+    requireIntegerOption(maxPendingCommands, "maxPendingCommands", { min: 1, max: 1_000_000 })
+    requireIntegerOption(maxResults, "maxResults", { min: 1, max: 1_000_000 })
+    requireIntegerOption(seenLimit, "seenLimit", { min: 1, max: 1_000_000 })
+    requireIntegerOption(leaseMs, "leaseMs", { min: 100, max: 300_000 })
+    requireIntegerOption(maxCommandTtlMs, "maxCommandTtlMs", { min: 1000, max: 3_600_000 })
+    if (typeof now !== "function") throw new TypeError("now must be a function")
     requireAbsoluteUri(luantiSource, "luantiSource")
     if (typeof luantiAdapterId !== "string" || !ID_PATTERN.test(luantiAdapterId)) {
       throw new TypeError("luantiAdapterId must be a valid ESIP identifier")
     }
     for (const commandSource of allowedCommandSources) requireAbsoluteUri(commandSource, "allowed command source")
+    if (!(store instanceof SidecarStore)) throw new TypeError("store must implement SidecarStore")
     this.token = token
     this.host = host
     this.port = port
@@ -170,6 +180,7 @@ export class HttpSidecar {
     this.leaseMs = leaseMs
     this.maxCommandTtlMs = maxCommandTtlMs
     this.now = now
+    this.store = store
 
     this.#server = createServer((request, response) => {
       this.#handle(request, response).catch((error) => {
@@ -188,25 +199,7 @@ export class HttpSidecar {
     this.#server.keepAliveTimeout = 5000
   }
 
-  #accept(message) {
-    const seenKey = message.source + "\u0000" + message.id
-    const current = fingerprint(message)
-    const previous = this.#seen.get(seenKey)
-    if (previous !== undefined) {
-      if (previous !== current) throw new EsipError("id_conflict", "message id was reused with different content")
-      return false
-    }
-    const last = this.#lastSequence.get(message.source)
-    if (last !== undefined && message.sequence <= last) {
-      throw new EsipError("sequence_replay", `sequence ${message.sequence} is not newer than ${last}`)
-    }
-    this.#seen.set(seenKey, current)
-    while (this.#seen.size > this.seenLimit) this.#seen.delete(this.#seen.keys().next().value)
-    this.#lastSequence.set(message.source, message.sequence)
-    return true
-  }
-
-  enqueueCommand(rawMessage) {
+  async enqueueCommand(rawMessage) {
     const message = validateMessage(clone(rawMessage), { now: this.now() })
     if (!COMMAND_TYPES.has(message.type) || (message.kind !== "command" && message.kind !== "query")) {
       throw new EsipError("forbidden", "only declared Evolution commands and queries may enter the Luanti queue")
@@ -218,43 +211,21 @@ export class HttpSidecar {
       throw new EsipError("invalid_message", `command expiry must be within ${this.maxCommandTtlMs} ms`)
     }
     const currentFingerprint = fingerprint(message)
-    const previousCommand = this.#commandIds.get(message.id)
-    if (previousCommand) {
-      if (previousCommand.source !== message.source || previousCommand.fingerprint !== currentFingerprint) {
-        throw new EsipError("id_conflict", "command id was already used by a different message")
-      }
-      return { accepted: false, duplicate: true, id: message.id }
-    }
-    if (this.#commands.size >= this.maxPendingCommands) throw new EsipError("queue_full", "pending command queue is full")
-    const accepted = this.#accept(message)
-    if (!accepted) return { accepted: false, duplicate: true, id: message.id }
-    this.#commandIds.set(message.id, { source: message.source, fingerprint: currentFingerprint })
-    while (this.#commandIds.size > this.seenLimit) this.#commandIds.delete(this.#commandIds.keys().next().value)
-    this.#commands.set(message.id, { message, leaseUntil: 0, attempts: 0 })
-    return { accepted: true, duplicate: false, id: message.id }
+    return this.store.enqueueCommand(message, {
+      fingerprint: currentFingerprint,
+      maxPendingCommands: this.maxPendingCommands,
+      seenLimit: this.seenLimit,
+    })
   }
 
-  leaseCommands(target, limit = 4) {
+  async leaseCommands(target, limit = 4) {
     if (target !== this.luantiSource && target !== this.luantiAdapterId) {
       throw new EsipError("forbidden", "poll target is not the configured Luanti adapter")
     }
-    const instant = this.now()
-    const messages = []
-    for (const [id, entry] of this.#commands) {
-      if (Date.parse(entry.message.expiresat) <= instant) {
-        this.#commands.delete(id)
-        continue
-      }
-      if (entry.leaseUntil > instant) continue
-      entry.leaseUntil = instant + this.leaseMs
-      entry.attempts += 1
-      messages.push(clone(entry.message))
-      if (messages.length >= limit) break
-    }
-    return messages
+    return this.store.leaseCommands({ now: this.now(), leaseMs: this.leaseMs, limit })
   }
 
-  acceptLuantiMessage(rawMessage) {
+  async acceptLuantiMessage(rawMessage) {
     const message = validateMessage(clone(rawMessage), { now: this.now() })
     if (message.source !== this.luantiSource) throw new EsipError("forbidden", "message source is not the configured Luanti source")
     if (!LUANTI_TYPES.has(message.type) || (message.kind !== "event" && message.kind !== "result")) {
@@ -269,41 +240,36 @@ export class HttpSidecar {
     if (message.type !== TYPES.CAPABILITY_HELLO && !this.allowedCommandSources.has(message.target)) {
       throw new EsipError("forbidden", "Luanti result target is not an allowed control source")
     }
-    const accepted = this.#accept(message)
-    if (!accepted) return { accepted: false, duplicate: true, id: message.id }
     const commandId = respondingTo(message)
-    if (commandId) this.#commands.delete(commandId)
-    this.#cursor += 1
-    this.#results.push({ cursor: this.#cursor, message })
-    while (this.#results.length > this.maxResults) this.#results.shift()
-    return { accepted: true, duplicate: false, id: message.id, cursor: this.#cursor }
+    return this.store.acceptLuantiMessage(message, {
+      fingerprint: fingerprint(message),
+      commandId,
+      maxResults: this.maxResults,
+      seenLimit: this.seenLimit,
+    })
   }
 
-  listResults(after = 0, limit = 100) {
-    const entries = this.#results.filter((entry) => entry.cursor > after).slice(0, limit).map(clone)
-    return {
-      entries,
-      nextCursor: entries.at(-1)?.cursor ?? after,
-      latestCursor: this.#cursor,
-      oldestCursor: this.#results[0]?.cursor ?? this.#cursor,
-    }
+  async listResults(after = 0, limit = 100) {
+    return this.store.listResults(after, limit)
   }
 
-  stats() {
+  async stats() {
+    const diagnostics = await this.store.diagnostics(this.now())
     return {
       status: "ok",
       protocol: "ESIP 0.1",
       luantiSource: this.luantiSource,
-      pendingCommands: this.#commands.size,
-      retainedResults: this.#results.length,
-      latestCursor: this.#cursor,
+      pendingCommands: diagnostics.pendingCommands,
+      retainedResults: diagnostics.retainedResults,
+      latestCursor: diagnostics.latestCursor,
+      storage: diagnostics.storage,
     }
   }
 
   async #handle(request, response) {
     const url = new URL(request.url ?? "/", "http://sidecar.local")
     if (request.method === "GET" && url.pathname === "/health") {
-      writeJson(response, 200, this.stats())
+      writeJson(response, 200, await this.stats())
       return
     }
     if (!url.pathname.startsWith("/v1/") || !bearerMatches(request.headers.authorization, this.token)) {
@@ -315,31 +281,40 @@ export class HttpSidecar {
     }
 
     if (request.method === "POST" && url.pathname === "/v1/commands") {
-      const result = this.enqueueCommand(await readJson(request, this.maxMessageBytes))
+      const result = await this.enqueueCommand(await readJson(request, this.maxMessageBytes))
       writeJson(response, 202, result)
       return
     }
     if (request.method === "GET" && url.pathname === "/v1/commands") {
       const target = url.searchParams.get("target") ?? ""
       const limit = parseBoundedInteger(url.searchParams.get("limit"), 4, { min: 1, max: 8 })
-      writeJson(response, 200, { messages: this.leaseCommands(target, limit) })
+      writeJson(response, 200, { messages: await this.leaseCommands(target, limit) })
       return
     }
     if (request.method === "POST" && url.pathname === "/v1/messages") {
-      const result = this.acceptLuantiMessage(await readJson(request, this.maxMessageBytes))
+      const result = await this.acceptLuantiMessage(await readJson(request, this.maxMessageBytes))
       writeJson(response, 202, result)
       return
     }
     if (request.method === "GET" && url.pathname === "/v1/results") {
       const after = parseBoundedInteger(url.searchParams.get("after"), 0, { min: 0, max: Number.MAX_SAFE_INTEGER })
       const limit = parseBoundedInteger(url.searchParams.get("limit"), 100, { min: 1, max: 500 })
-      writeJson(response, 200, this.listResults(after, limit))
+      writeJson(response, 200, await this.listResults(after, limit))
+      return
+    }
+    if (request.method === "GET" && url.pathname === "/v1/diagnostics") {
+      writeJson(response, 200, await this.store.diagnostics(this.now()))
       return
     }
     writeJson(response, 404, { error: { code: "not_found", message: "endpoint not found", retryable: false } })
   }
 
-  listen() {
+  async listen() {
+    await this.store.initialize({
+      luantiSource: this.luantiSource,
+      luantiAdapterId: this.luantiAdapterId,
+      allowedCommandSources: [...this.allowedCommandSources],
+    })
     return new Promise((resolve, reject) => {
       const onError = (error) => reject(error)
       this.#server.once("error", onError)
@@ -351,14 +326,13 @@ export class HttpSidecar {
     })
   }
 
-  close() {
-    return new Promise((resolve, reject) => {
-      if (!this.#server.listening) {
-        resolve()
-        return
-      }
-      this.#server.close((error) => error ? reject(error) : resolve())
-    })
+  async close() {
+    if (this.#server.listening) {
+      await new Promise((resolve, reject) => {
+        this.#server.close((error) => error ? reject(error) : resolve())
+      })
+    }
+    await this.store.close()
   }
 }
 

@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { createHttpSidecar } from "../src/interop/index.mjs"
+import { dirname, join, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
+import { createHttpSidecar, createJournalSidecarStore, createMemorySidecarStore } from "../src/interop/index.mjs"
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 
 function integerSetting(name, fallback, { min, max }) {
   const raw = process.env[name]
@@ -23,6 +27,22 @@ const luantiSource = process.env.ESIP_LUANTI_SOURCE || "esip://luanti/world-alph
 const luantiAdapterId = process.env.ESIP_LUANTI_ADAPTER_ID || "luanti-world-alpha"
 const allowedCommandSources = (process.env.ESIP_ALLOWED_COMMAND_SOURCES || "esip://local/control")
   .split(",").map((value) => value.trim()).filter(Boolean)
+const storeMode = process.env.ESIP_SIDECAR_STORE || "journal"
+if (storeMode !== "journal" && storeMode !== "memory") {
+  throw new Error("ESIP_SIDECAR_STORE must be journal or memory")
+}
+const runtimeDir = resolve(process.env.EVOLUTION_RUNTIME_DIR || join(root, "runtime"))
+const storeDirectory = resolve(process.env.ESIP_SIDECAR_STORE_DIR || join(runtimeDir, "sidecar"))
+const checkpointEvery = integerSetting("ESIP_SIDECAR_CHECKPOINT_EVERY", 100, { min: 1, max: 1_000_000 })
+const maxMessageBytes = integerSetting("ESIP_SIDECAR_MAX_MESSAGE_BYTES", 64 * 1024, { min: 1024, max: 4 * 1024 * 1024 })
+const maxPendingCommands = integerSetting("ESIP_SIDECAR_MAX_PENDING_COMMANDS", 1000, { min: 1, max: 1_000_000 })
+const maxResults = integerSetting("ESIP_SIDECAR_MAX_RESULTS", 1000, { min: 1, max: 1_000_000 })
+const seenLimit = integerSetting("ESIP_SIDECAR_SEEN_LIMIT", 10_000, { min: 100, max: 1_000_000 })
+const leaseMs = integerSetting("ESIP_SIDECAR_LEASE_MS", 5000, { min: 100, max: 300_000 })
+const maxCommandTtlMs = integerSetting("ESIP_SIDECAR_MAX_COMMAND_TTL_MS", 60_000, { min: 1000, max: 3_600_000 })
+const store = storeMode === "journal"
+  ? createJournalSidecarStore({ directory: storeDirectory, checkpointEvery })
+  : createMemorySidecarStore()
 
 const sidecar = createHttpSidecar({
   token,
@@ -31,6 +51,13 @@ const sidecar = createHttpSidecar({
   luantiSource,
   luantiAdapterId,
   allowedCommandSources,
+  maxMessageBytes,
+  maxPendingCommands,
+  maxResults,
+  seenLimit,
+  leaseMs,
+  maxCommandTtlMs,
+  store,
 })
 const address = await sidecar.listen()
 const displayHost = address.host.includes(":") ? `[${address.host}]` : address.host
@@ -38,6 +65,7 @@ const displayHost = address.host.includes(":") ? `[${address.host}]` : address.h
 console.log(`Evolution ESIP sidecar listening on http://${displayHost}:${address.port}`)
 console.log(`Luanti target: ${luantiSource}`)
 console.log(`Allowed command sources: ${allowedCommandSources.join(", ")}`)
+console.log(`Sidecar store: ${storeMode}${storeMode === "journal" ? ` (${storeDirectory})` : ""}`)
 console.log("The bearer token is loaded from EVOLUTION_ESIP_TOKEN and is not printed.")
 
 let stopping = false

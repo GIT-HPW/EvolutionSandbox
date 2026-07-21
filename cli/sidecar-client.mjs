@@ -4,10 +4,11 @@ import { randomUUID } from "node:crypto"
 import { TYPES, createMessage } from "../src/interop/index.mjs"
 
 const [operation, actorId, argument] = process.argv.slice(2)
-const operations = new Set(["state", "action", "timelines", "create-timeline", "join-timeline"])
-if (!operation || !actorId || !operations.has(operation)
+const operations = new Set(["diagnostics", "state", "action", "timelines", "create-timeline", "join-timeline"])
+if (!operation || !operations.has(operation) || (operation !== "diagnostics" && !actorId)
     || (["action", "create-timeline", "join-timeline"].includes(operation) && !argument)) {
   console.error("Usage:")
+  console.error("  npm run sidecar:client -- diagnostics")
   console.error("  npm run sidecar:client -- state <actor-id>")
   console.error("  npm run sidecar:client -- action <actor-id> <action-id>")
   console.error("  npm run sidecar:client -- timelines <actor-id> [after-revision]")
@@ -49,6 +50,11 @@ async function api(path, { method = "GET", body } = {}) {
   const payload = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(`${payload.error?.code ?? response.status}: ${payload.error?.message ?? response.statusText}`)
   return payload
+}
+
+if (operation === "diagnostics") {
+  console.log(JSON.stringify(await api("/v1/diagnostics"), null, 2))
+  process.exit(0)
 }
 
 async function publish(message) {

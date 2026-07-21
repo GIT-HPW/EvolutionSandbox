@@ -130,6 +130,12 @@ test("HTTP sidecar completes a leased Luanti state-query round trip", async () =
 
     const unauthorized = await api("/v1/commands", { method: "POST", body: stateRequest(), token: "wrong" })
     assert.equal(unauthorized.response.status, 401)
+    const unauthorizedDiagnostics = await api("/v1/diagnostics", { token: "wrong" })
+    assert.equal(unauthorizedDiagnostics.response.status, 401)
+
+    const diagnostics = await api("/v1/diagnostics")
+    assert.equal(diagnostics.response.status, 200)
+    assert.equal(diagnostics.payload.storage.kind, "memory")
 
     const queued = await api("/v1/commands", { method: "POST", body: stateRequest() })
     assert.equal(queued.response.status, 202)
@@ -207,6 +213,8 @@ test("HTTP sidecar refuses non-loopback binding and short tokens", () => {
   assert.throws(() => createHttpSidecar({ token: TOKEN, host: "0.0.0.0" }), /host must/)
   assert.throws(() => createHttpSidecar({ token: "short" }), /32-256/)
   assert.throws(() => createHttpSidecar({ token: "x".repeat(32) + "\r\n" }), /URL-safe/)
+  assert.throws(() => createHttpSidecar({ token: TOKEN, maxPendingCommands: 0 }), /maxPendingCommands/)
+  assert.throws(() => createHttpSidecar({ token: TOKEN, leaseMs: 99 }), /leaseMs/)
 })
 
 test("HTTP sidecar leases and completes world timeline commands", async () => {
