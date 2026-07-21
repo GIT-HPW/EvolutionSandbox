@@ -3,6 +3,8 @@
 [![verify](https://github.com/GIT-HPW/EvolutionSandbox/actions/workflows/ci.yml/badge.svg)](https://github.com/GIT-HPW/EvolutionSandbox/actions/workflows/ci.yml)
 [![pages](https://github.com/GIT-HPW/EvolutionSandbox/actions/workflows/pages.yml/badge.svg)](https://github.com/GIT-HPW/EvolutionSandbox/actions/workflows/pages.yml)
 
+面向使用者的统一入口：[项目群说明与快速开始指南](docs/PROJECT_GUIDE.md)。它覆盖浏览器试玩、Luanti 运行、openVirFactory 自然语言工厂、组合部署以及日常更新与备份。
+
 EvolutionSandbox 是把 [`Evolution-`](https://github.com/GIT-HPW/Evolution-) 宇宙剧本逐步转化为高自由度沙盒游戏规则的实验项目。它不是把章节原文硬编码进游戏，而是把“维度、时间线、能量、信息、熵、创造与毁灭”整理为可验证、可保存、可扩展的内容包和状态机。
 
 首个版本完成一个最小可玩闭环：玩家作为零维混沌中的原始能量信息体，通过观察、撕裂和融合改变宇宙状态；达到信息、熵和碎片阈值后触发大爆炸，进入可以创造、毁灭、稳定物质并建立时间线分支的首个三维领域。
