@@ -189,6 +189,29 @@ test("two actors create and join world timelines with registry conflict and catc
   assert.equal(catchUp.truncated, false)
 })
 
+test("browser authority persists the first 3D matter mission through ESIP", async () => {
+  const storage = new MemoryStorage()
+  const world = await connectWorld(storage)
+  await evolve(world, world.a)
+  await action(world, world.a, "create")
+  await action(world, world.a, "stabilize")
+  await action(world, world.a, "destroy")
+
+  const completed = world.game.getActorState(ACTOR_A)
+  assert.equal(completed.matter, 0)
+  assert.deepEqual(
+    [completed.matterCreated, completed.matterStabilized, completed.matterRecycled],
+    [1, 1, 1],
+  )
+
+  const sequences = { [CONTROL_A]: world.a.control.nextSequence, [CONTROL_B]: world.b.control.nextSequence }
+  world.a.control.disconnect()
+  world.b.control.disconnect()
+  world.game.disconnect()
+  const reloaded = await connectWorld(storage, sequences)
+  assert.equal(reloaded.game.getActorState(ACTOR_A).matterRecycled, 1)
+})
+
 test("source-to-actor mapping rejects impersonation and identity rebinding", async () => {
   const world = await connectWorld(new MemoryStorage())
   await world.a.control.emit(TYPES.STATE_REQUESTED, "query", {
@@ -198,7 +221,7 @@ test("source-to-actor mapping rejects impersonation and identity rebinding", asy
   assert.throws(() => world.game.registerIdentity(CONTROL_A, ACTOR_B), (error) => error.code === "identity_conflict")
 })
 
-test("browser game migrates v1 storage and fails closed on corrupt state", () => {
+test("browser game migrates older storage and fails closed on corrupt state", () => {
   const storage = new MemoryStorage()
   storage.setItem("evolution-sandbox.esip.browser.v1", JSON.stringify({
     schema: 1,
@@ -212,7 +235,23 @@ test("browser game migrates v1 storage and fails closed on corrupt state", () =>
   }))
   const migrated = createBrowserEvolutionAdapter({ pack, storage, identities: IDENTITIES, primaryActorId: ACTOR_A })
   assert.equal(migrated.getActorRevision(ACTOR_A), 3)
-  assert.equal(JSON.parse(storage.getItem("evolution-sandbox.esip.browser.v1")).schema, 2)
+  assert.equal(JSON.parse(storage.getItem("evolution-sandbox.esip.browser.v1")).schema, 3)
+
+  const v2Storage = new MemoryStorage()
+  const current = createBrowserEvolutionAdapter({ pack, storage: v2Storage, identities: IDENTITIES, primaryActorId: ACTOR_A })
+  current.resetLocalState()
+  const v2Record = JSON.parse(v2Storage.getItem("evolution-sandbox.esip.browser.v1"))
+  v2Record.schema = 2
+  for (const actor of v2Record.actors) {
+    delete actor.state.matter
+    delete actor.state.matterCreated
+    delete actor.state.matterStabilized
+    delete actor.state.matterRecycled
+  }
+  v2Storage.setItem("evolution-sandbox.esip.browser.v1", JSON.stringify(v2Record))
+  const v2Migrated = createBrowserEvolutionAdapter({ pack, storage: v2Storage, identities: IDENTITIES, primaryActorId: ACTOR_A })
+  assert.equal(v2Migrated.getActorState(ACTOR_A).matter, 0)
+  assert.equal(JSON.parse(v2Storage.getItem("evolution-sandbox.esip.browser.v1")).schema, 3)
 
   storage.setItem("evolution-sandbox.esip.browser.v1", "{not-json")
   assert.throws(() => createBrowserEvolutionAdapter({ pack, storage, identities: IDENTITIES }), (error) => error.code === "invalid_storage")

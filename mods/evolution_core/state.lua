@@ -126,9 +126,9 @@ end
 
 function api.status(state)
     return string.format(
-        "阶段=%s 维度=%dD 能量=%d 信息=%d 熵=%d 稳定=%d 碎片=%d 时间线=%s",
+        "阶段=%s 维度=%dD 能量=%d 信息=%d 熵=%d 稳定=%d 碎片=%d 物质=%d 时间线=%s",
         state.phase, state.dimension, state.energy, state.information,
-        state.entropy, state.stability, state.fragments, state.timeline
+        state.entropy, state.stability, state.fragments, state.matter or 0, state.timeline
     )
 end
 

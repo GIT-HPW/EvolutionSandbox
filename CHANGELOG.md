@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- 为首个三维领域增加权威物质库存，以及凝聚、稳定、回收三个持久里程碑；无物质时不再允许稳定或毁灭。
+- Babylon 客户端增加大爆炸领域跃迁过场、领域锚定任务面板、状态驱动的物质实体与完成反馈，并为六项核心状态调整响应式布局。
+- 浏览器存储升级为 schema 3；schema 2 存档显式补齐新增物质字段，保留 actor、revision、时间线、序列与幂等记录。
 - 增加 `clients/web-babylon` 高精度浏览器客户端垂直切片，提供动漫化能量核心、时间环、碎片、三维领域、镜头、辉光、冲击波和程序化音效。
 - Babylon 客户端复用现有内容包、浏览器 ESIP 权威适配器、control sequence 和 localStorage 存档；基础 WebGL 版继续作为轻量降级入口。
 - 将 Babylon 客户端纳入根 npm workspace、Pages 静态构建、CSP/权威边界测试和 4 MiB 初始 JavaScript 包体预算。

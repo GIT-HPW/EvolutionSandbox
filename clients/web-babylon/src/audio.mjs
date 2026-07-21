@@ -46,5 +46,20 @@ export function playActionSound(actionId) {
     tone({ frequency: 520, endFrequency: 1400, duration: 0.8, type: "sine", gain: 0.035, delay: 0.06 })
     return
   }
+  if (actionId === "create") {
+    tone({ frequency: 180, endFrequency: 520, duration: 0.44, type: "triangle", gain: 0.045 })
+    tone({ frequency: 360, endFrequency: 760, duration: 0.34, type: "sine", gain: 0.028, delay: 0.09 })
+    return
+  }
+  if (actionId === "destroy") {
+    tone({ frequency: 420, endFrequency: 65, duration: 0.5, type: "sawtooth", gain: 0.042 })
+    return
+  }
+  if (actionId === "realm_complete") {
+    tone({ frequency: 262, endFrequency: 524, duration: 0.65, type: "sine", gain: 0.038 })
+    tone({ frequency: 392, endFrequency: 784, duration: 0.72, type: "triangle", gain: 0.032, delay: 0.11 })
+    tone({ frequency: 523, endFrequency: 1046, duration: 0.78, type: "sine", gain: 0.024, delay: 0.2 })
+    return
+  }
   tone({ frequency: 240, endFrequency: 420, duration: 0.25, type: "triangle", gain: 0.035 })
 }

@@ -13,6 +13,10 @@
     "entropy": { "type": "integer", "minimum": 0 },
     "stability": { "type": "integer", "minimum": 0 },
     "fragments": { "type": "integer", "minimum": 0 },
+    "matter": { "type": "integer", "minimum": 0 },
+    "matterCreated": { "type": "integer", "minimum": 0 },
+    "matterStabilized": { "type": "integer", "minimum": 0 },
+    "matterRecycled": { "type": "integer", "minimum": 0 },
     "timeline": { "type": "string", "minLength": 1, "maxLength": 128 },
     "steps": { "type": "integer", "minimum": 0 }
   },

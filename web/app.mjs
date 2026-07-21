@@ -30,7 +30,7 @@ const scene = createEvolutionScene(document.querySelector("#universe-scene"), {
   statusElement: document.querySelector("#scene-status"),
   captionElement: document.querySelector("#scene-caption"),
 })
-const labels = { energy: "能量", information: "信息", entropy: "熵", stability: "稳定", fragments: "碎片" }
+const labels = { energy: "能量", information: "信息", entropy: "熵", stability: "稳定", fragments: "碎片", matter: "物质" }
 const statScales = { energy: 36, information: 18, entropy: 20, stability: 24, fragments: 8 }
 const pending = new Map()
 let state
@@ -324,7 +324,7 @@ async function start() {
   await control.connect(router)
   const snapshot = await request(TYPES.STATE_REQUESTED, "query", {
     context: currentContext(),
-    fields: ["phase", "dimension", "energy", "information", "entropy", "stability", "fragments", "timeline", "steps"],
+    fields: ["phase", "dimension", "energy", "information", "entropy", "stability", "fragments", "matter", "matterCreated", "matterStabilized", "matterRecycled", "timeline", "steps"],
   })
   if (snapshot.type === TYPES.ERROR) throw new Error(`${snapshot.data.code}：${snapshot.data.message}`)
   state = snapshot.data.state

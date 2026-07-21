@@ -6,7 +6,7 @@ import { EsipError } from "./errors.mjs"
 import { TYPES } from "./message-types.mjs"
 
 export const DEFAULT_BROWSER_STORAGE_KEY = "evolution-sandbox.esip.browser.v1"
-const STORAGE_SCHEMA = 2
+const STORAGE_SCHEMA = 3
 const PROCESSED_LIMIT = 256
 const TIMELINE_LIMIT = 256
 const ACTOR_LIMIT = 64
@@ -67,6 +67,14 @@ function validateStoredState(pack, state) {
   return structuredClone(state)
 }
 
+function migrateStoredState(pack, state) {
+  if (!plainObject(state)) throw new EsipError("invalid_storage", "stored state must be an object")
+  const template = createState(pack)
+  const unknownFields = Object.keys(state).filter((key) => !(key in template))
+  if (unknownFields.length > 0) throw new EsipError("invalid_storage", "stored state contains fields unknown to the content pack")
+  return validateStoredState(pack, { ...template, ...state })
+}
+
 function normalizeIdentities(identities) {
   if (!Array.isArray(identities) || identities.length === 0 || identities.length > ACTOR_LIMIT) {
     throw new TypeError(`identities must contain 1-${ACTOR_LIMIT} source/actor mappings`)
@@ -104,7 +112,7 @@ function migrateV1(record, pack, universeId, identities) {
   requireId(record.actorId, "stored actorId")
   requireNonNegativeInteger(record.revision, "revision")
   requireNonNegativeInteger(record.nextSequence, "nextSequence")
-  const state = validateStoredState(pack, record.state)
+  const state = migrateStoredState(pack, record.state)
   const mapped = identities.some((identity) => identity.actorId === record.actorId)
     ? identities
     : [{ source: "esip://browser/control", actorId: record.actorId }, ...identities]
@@ -124,6 +132,14 @@ function migrateV1(record, pack, universeId, identities) {
     lastSequences: plainObject(record.lastSequences) ? record.lastSequences : {},
     processed: Array.isArray(record.processed) ? record.processed.slice(-PROCESSED_LIMIT) : [],
   }
+}
+
+function migrateV2(record, pack) {
+  if (!Array.isArray(record.actors)) throw new EsipError("invalid_storage", "stored actors are invalid")
+  const migrated = structuredClone(record)
+  migrated.schema = STORAGE_SCHEMA
+  for (const actor of migrated.actors) actor.state = migrateStoredState(pack, actor.state)
+  return migrated
 }
 
 function validateRecord(record, pack, universeId) {
@@ -201,8 +217,9 @@ function loadRecord(storage, storageKey, pack, universeId, identities) {
   if (raw === null) return { record: newRecord(pack, universeId, identities), migrated: false }
   let record
   try { record = JSON.parse(raw) } catch { throw new EsipError("invalid_storage", "stored browser game state is not valid JSON") }
-  const migrated = record?.schema === 1
-  if (migrated) record = migrateV1(record, pack, universeId, identities)
+  const migrated = record?.schema === 1 || record?.schema === 2
+  if (record?.schema === 1) record = migrateV1(record, pack, universeId, identities)
+  else if (record?.schema === 2) record = migrateV2(record, pack)
   return { record: validateRecord(record, pack, universeId), migrated }
 }
 

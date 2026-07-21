@@ -40,3 +40,19 @@ test("timeline branches are validated and only available in 3D", () => {
   assert.equal(branchTimeline(state, "alpha-1").timeline, "alpha-1")
   assert.throws(() => branchTimeline(state, "../unsafe"), /时间线名称/)
 })
+
+test("the first 3D realm requires real matter for stabilization and recycling", () => {
+  let state = createState(pack)
+  for (const action of pack.demo) state = applyAction(pack, state, action).state
+
+  assert.throws(() => applyAction(pack, state, "destroy"), (error) => error.code === "requirement")
+  assert.throws(() => applyAction(pack, state, "stabilize"), (error) => error.code === "requirement")
+
+  state = applyAction(pack, state, "create").state
+  state = applyAction(pack, state, "stabilize").state
+  state = applyAction(pack, state, "destroy").state
+  assert.equal(state.matter, 0)
+  assert.equal(state.matterCreated, 1)
+  assert.equal(state.matterStabilized, 1)
+  assert.equal(state.matterRecycled, 1)
+})

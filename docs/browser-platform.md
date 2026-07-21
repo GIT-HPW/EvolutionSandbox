@@ -25,7 +25,7 @@ localStorage 多 actor 状态与世界注册表
 
 ## 状态与重置
 
-默认 actor 是本地不透明标识 `browser-player`，控制 source 是 `esip://browser/control`，游戏 source 是 `esip://browser/sandbox`，存储键沿用 `evolution-sandbox.esip.browser.v1`。这个默认值是兼容旧浏览器存档的别名，不对应登录名。键名也不等于内部 schema 版本；v0.3 的单 actor 记录会显式迁移为 schema 2。字段、类型、阶段/维度、身份绑定或内容包边界不一致时会停止加载，不会静默覆盖存档。
+默认 actor 是本地不透明标识 `browser-player`，控制 source 是 `esip://browser/control`，游戏 source 是 `esip://browser/sandbox`，存储键沿用 `evolution-sandbox.esip.browser.v1`。这个默认值是兼容旧浏览器存档的别名，不对应登录名。键名也不等于内部 schema 版本；v0.3 的单 actor 记录和 schema 2 多 actor 记录会显式迁移为 schema 3，其中新增的物质库存与凝聚、稳定、回收里程碑从零开始。未知字段、错误类型、阶段/维度、身份绑定或内容包边界不一致时仍会停止加载，不会静默覆盖存档。
 
 “本地重开”是浏览器平台的本地管理操作，不是跨平台 ESIP 命令。它把当前 actor 状态恢复为内容包初始值，但 revision 继续递增，避免旧命令在重置后意外生效。普通行为、时间线建立、加入和注册表查询都经过 ESIP。注册表查询携带 `afterRevision` 时只返回其后的事件；请求点早于本地保留窗口时返回完整目录并标记 `truncated: true`。
 

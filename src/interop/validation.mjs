@@ -72,10 +72,13 @@ function requireContext(value, { actor = false, realm = false } = {}) {
 
 function requireState(value, path = "data.state") {
   requireObject(value, path)
-  rejectUnknown(value, ["schema", "phase", "dimension", "energy", "information", "entropy", "stability", "fragments", "timeline", "steps"], path)
+  rejectUnknown(value, ["schema", "phase", "dimension", "energy", "information", "entropy", "stability", "fragments", "matter", "matterCreated", "matterStabilized", "matterRecycled", "timeline", "steps"], path)
   for (const key of ["phase", "timeline"]) requireString(value[key], `${path}.${key}`, { max: 128 })
   for (const key of ["dimension", "energy", "information", "entropy", "stability", "fragments", "steps"]) {
     requireInteger(value[key], `${path}.${key}`)
+  }
+  for (const key of ["matter", "matterCreated", "matterStabilized", "matterRecycled"]) {
+    if (value[key] !== undefined) requireInteger(value[key], `${path}.${key}`)
   }
 }
 

@@ -159,7 +159,13 @@ export function createAnimeUniverse(canvas, { reducedMotion = false } = {}) {
 
   const grid = createGrid(scene)
   const realmRoot = new TransformNode("first-3d-realm", scene)
-  const realmOrbs = [COLORS.cyan, COLORS.violet, COLORS.gold].map((color, index) => {
+  const realmColors = [COLORS.cyan, COLORS.violet, COLORS.gold]
+  const realmAnchor = CreateTorus("realm-anchor", { diameter: 9.2, thickness: 0.045, tessellation: 192 }, scene)
+  realmAnchor.parent = realmRoot
+  realmAnchor.position.y = -3.05
+  realmAnchor.material = material(scene, "realm-anchor-material", { emissive: COLORS.cyan.scale(0.42), alpha: 0.72 })
+  realmAnchor.scaling.setAll(0)
+  const realmOrbs = realmColors.map((color, index) => {
     const orb = CreateIcoSphere(`matter-orb-${index}`, { radius: 0.8 + index * 0.22, subdivisions: 3 }, scene)
     orb.parent = realmRoot
     orb.position.set(-5 + index * 5, -1 + index * 0.9, 2.5 - index * 2.2)
@@ -167,6 +173,8 @@ export function createAnimeUniverse(canvas, { reducedMotion = false } = {}) {
     orb.renderOutline = true
     orb.outlineColor = Color3.White()
     orb.outlineWidth = 0.02
+    orb.scaling.setAll(0)
+    orb.setEnabled(false)
     return orb
   })
   realmRoot.setEnabled(false)
@@ -179,7 +187,12 @@ export function createAnimeUniverse(canvas, { reducedMotion = false } = {}) {
   let phaseBlend = 0
   let shockAge = 99
   let splitImpulse = 0
-  let target = { energy: 24, information: 0, entropy: 0, stability: 12, fragments: 0, phase: "origin_0d" }
+  let matterImpulse = 0
+  let stabilityImpulse = 0
+  let target = {
+    energy: 24, information: 0, entropy: 0, stability: 12, fragments: 0,
+    matter: 0, matterCreated: 0, matterStabilized: 0, matterRecycled: 0, phase: "origin_0d",
+  }
 
   function setState(state) {
     target = { ...target, ...state }
@@ -189,9 +202,15 @@ export function createAnimeUniverse(canvas, { reducedMotion = false } = {}) {
     if (actionId === "big_bang") shockAge = 0
     if (actionId === "split") splitImpulse = 1
     if (actionId === "fuse" || actionId === "stabilize") splitImpulse = -0.5
+    if (actionId === "create") matterImpulse = 1
+    if (actionId === "destroy") matterImpulse = -1
+    if (actionId === "stabilize") stabilityImpulse = 1
+    if (actionId === "realm_complete") stabilityImpulse = 1.8
     if (actionId === "reset") {
       shockAge = 99
       phaseBlend = 0
+      matterImpulse = 0
+      stabilityImpulse = 0
       camera.radius = 17
     }
   }
@@ -202,6 +221,8 @@ export function createAnimeUniverse(canvas, { reducedMotion = false } = {}) {
     const motion = reducedMotion ? 0.18 : 1
     phaseBlend += ((target.phase === "first_3d" ? 1 : 0) - phaseBlend) * Math.min(1, delta * 2.4)
     splitImpulse *= Math.pow(0.05, delta)
+    matterImpulse *= Math.pow(0.06, delta)
+    stabilityImpulse *= Math.pow(0.12, delta)
     const energyScale = 0.72 + Math.min(0.82, target.energy / 54)
     const breathing = 1 + Math.sin(elapsed * 2.2) * 0.045 * motion
     core.scaling.setAll(energyScale * breathing + splitImpulse * 0.08)
@@ -238,8 +259,26 @@ export function createAnimeUniverse(canvas, { reducedMotion = false } = {}) {
       line.visibility = phaseBlend * (index % 4 === 0 ? 0.55 : 0.2)
     })
     realmRoot.setEnabled(phaseBlend > 0.01)
+    const missionComplete = target.matterCreated > 0 && target.matterStabilized > 0 && target.matterRecycled > 0
+    realmAnchor.scaling.setAll(phaseBlend * (1 + Math.max(0, stabilityImpulse) * 0.08))
+    realmAnchor.rotation.y += delta * (0.08 + Math.max(0, stabilityImpulse) * 0.18) * motion
+    realmAnchor.material.emissiveColor = Color3.Lerp(
+      COLORS.cyan.scale(0.42),
+      COLORS.gold.scale(0.78),
+      Math.min(1, (missionComplete ? 0.72 : 0) + Math.max(0, stabilityImpulse) * 0.35),
+    )
     realmOrbs.forEach((orb, index) => {
-      orb.scaling.setAll(phaseBlend)
+      const visible = index < Math.min(realmOrbs.length, target.matter)
+      if (visible) orb.setEnabled(true)
+      const desiredScale = visible ? phaseBlend * (1 + Math.max(0, matterImpulse) * 0.24) : 0
+      const nextScale = orb.scaling.x + (desiredScale - orb.scaling.x) * Math.min(1, delta * 7)
+      orb.scaling.setAll(nextScale)
+      if (!visible && nextScale < 0.015) orb.setEnabled(false)
+      orb.material.emissiveColor = Color3.Lerp(
+        realmColors[index].scale(0.72),
+        COLORS.gold.scale(0.82),
+        Math.min(1, (target.matterStabilized > 0 ? 0.58 : 0) + Math.max(0, stabilityImpulse) * 0.4),
+      )
       orb.rotation.y += delta * (0.12 + index * 0.08) * motion
       orb.position.y += Math.sin(elapsed * 0.8 + index) * delta * 0.06 * motion
     })

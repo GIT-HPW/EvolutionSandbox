@@ -32,6 +32,8 @@ return {
                 ["energy"] = -2,
                 ["entropy"] = 1,
                 ["information"] = 1,
+                ["matter"] = 1,
+                ["matterCreated"] = 1,
             },
             ["requires"] = {
                 ["energy"] = 2,
@@ -46,7 +48,12 @@ return {
             ["delta"] = {
                 ["energy"] = 1,
                 ["entropy"] = 2,
+                ["matter"] = -1,
+                ["matterRecycled"] = 1,
                 ["stability"] = -1,
+            },
+            ["requires"] = {
+                ["matter"] = 1,
             },
             ["result"] = "物质回归能量，系统熵继续增长。",
             ["title"] = "毁灭物质",
@@ -106,11 +113,13 @@ return {
                 ["energy"] = -1,
                 ["entropy"] = -2,
                 ["information"] = -2,
+                ["matterStabilized"] = 1,
                 ["stability"] = 3,
             },
             ["requires"] = {
                 ["energy"] = 1,
                 ["information"] = 2,
+                ["matter"] = 1,
             },
             ["result"] = "以能量和认知换取局部时空稳定。",
             ["title"] = "稳定时空",
@@ -132,6 +141,10 @@ return {
         ["entropy"] = 0,
         ["fragments"] = 0,
         ["information"] = 0,
+        ["matter"] = 0,
+        ["matterCreated"] = 0,
+        ["matterRecycled"] = 0,
+        ["matterStabilized"] = 0,
         ["phase"] = "origin_0d",
         ["schema"] = 1,
         ["stability"] = 12,
@@ -156,6 +169,22 @@ return {
             ["max"] = 999,
             ["min"] = 0,
         },
+        ["matter"] = {
+            ["max"] = 999,
+            ["min"] = 0,
+        },
+        ["matterCreated"] = {
+            ["max"] = 999999,
+            ["min"] = 0,
+        },
+        ["matterRecycled"] = {
+            ["max"] = 999999,
+            ["min"] = 0,
+        },
+        ["matterStabilized"] = {
+            ["max"] = 999999,
+            ["min"] = 0,
+        },
         ["stability"] = {
             ["max"] = 100,
             ["min"] = 0,
@@ -175,7 +204,7 @@ return {
         {
             ["dimension"] = 3,
             ["id"] = "first_3d",
-            ["objective"] = "创造、毁灭和稳定原始物质，并建立自己的时间线分支。",
+            ["objective"] = "完成首次物质凝聚、稳定与回收，为时间线分支准备领域锚点。",
             ["title"] = "首个三维领域",
         },
     },
@@ -189,5 +218,5 @@ return {
         ["repository"] = "https://github.com/GIT-HPW/Evolution-",
     },
     ["title"] = "原点：从零维混沌到首个三维领域",
-    ["version"] = "0.1.0",
+    ["version"] = "0.2.0",
 }

@@ -6,6 +6,7 @@ import { createBrowserEvolutionAdapter, DEFAULT_BROWSER_STORAGE_KEY } from "../.
 import { TYPES } from "../../../src/interop/message-types.mjs"
 import { MemoryRouter } from "../../../src/interop/router.mjs"
 import { playActionSound } from "./audio.mjs"
+import { firstRealmMission } from "./progression.mjs"
 import { createAnimeUniverse } from "./scene.mjs"
 
 const GAME_SOURCE = "esip://browser/sandbox"
@@ -13,8 +14,9 @@ const CONTROL_SOURCE = "esip://browser/control"
 const ACTOR_ID = "browser-player"
 const UNIVERSE_ID = "universe-1"
 const CONTROL_SEQUENCE_KEY = `${DEFAULT_BROWSER_STORAGE_KEY}.controlSequence`
-const labels = { energy: "能量", information: "信息", entropy: "熵", stability: "稳定", fragments: "碎片" }
-const scales = { energy: 40, information: 18, entropy: 20, stability: 24, fragments: 8 }
+const labels = { energy: "能量", information: "信息", entropy: "熵", stability: "稳定", fragments: "碎片", matter: "物质" }
+const scales = { energy: 40, information: 18, entropy: 20, stability: 24, fragments: 8, matter: 3 }
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches
 
 const pack = validatePack(await fetch("./origin.json").then((response) => {
   if (!response.ok) throw new Error(`内容包加载失败：HTTP ${response.status}`)
@@ -22,11 +24,13 @@ const pack = validatePack(await fetch("./origin.json").then((response) => {
 }))
 
 const canvas = document.querySelector("#render-canvas")
-const scene = createAnimeUniverse(canvas, {
-  reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
-})
+const scene = createAnimeUniverse(canvas, { reducedMotion })
+const stage = document.querySelector(".stage")
 const phaseBadge = document.querySelector("#phase-badge")
 const objective = document.querySelector("#objective")
+const missionPanel = document.querySelector("#mission-panel")
+const missionStatus = document.querySelector("#mission-status")
+const missionSteps = document.querySelector("#mission-steps")
 const stats = document.querySelector("#stats")
 const actions = document.querySelector("#actions")
 const feedback = document.querySelector("#feedback")
@@ -34,6 +38,7 @@ const eventLog = document.querySelector("#event-log")
 const resetButton = document.querySelector("#reset")
 const autoButton = document.querySelector("#auto-demo")
 const fallback = document.querySelector("#render-fallback")
+const realmTransition = document.querySelector("#realm-transition")
 const pending = new Map()
 
 let state
@@ -83,11 +88,34 @@ function requirementText(action) {
     .join(" · ")
 }
 
+function missingRequirements(action) {
+  return Object.entries(action.requires ?? {}).filter(([key, value]) => (state[key] ?? 0) < value)
+}
+
+function renderMission() {
+  const mission = firstRealmMission(state)
+  missionPanel.hidden = !mission.active
+  if (!mission.active) return
+  missionPanel.dataset.complete = String(mission.complete)
+  missionStatus.textContent = mission.complete ? "领域已锚定" : `${mission.completed} / ${mission.total}`
+  missionSteps.replaceChildren(...mission.steps.map((step) => {
+    const item = document.createElement("li")
+    item.dataset.complete = String(step.complete)
+    const title = document.createElement("strong")
+    title.textContent = step.title
+    const detail = document.createElement("span")
+    detail.textContent = step.complete ? "权威状态已确认" : step.detail
+    item.append(title, detail)
+    return item
+  }))
+}
+
 function render() {
   const currentPhase = phase()
   if (!state || !currentPhase) return
   phaseBadge.textContent = `${currentPhase.title} · ${state.dimension}D · revision ${revision}`
   objective.textContent = currentPhase.objective
+  renderMission()
   stats.replaceChildren(...Object.entries(labels).map(([key, label]) => {
     const card = document.createElement("div")
     card.className = "stat-card"
@@ -106,19 +134,36 @@ function render() {
     button.type = "button"
     button.dataset.action = id
     const available = action.availableIn.includes(state.phase)
-    button.disabled = busy || autoRunning
-    button.classList.toggle("locked", !available)
-    button.setAttribute("aria-disabled", String(!available))
+    const missing = missingRequirements(action)
+    const ready = available && missing.length === 0
+    button.disabled = busy || autoRunning || !ready
+    button.classList.toggle("locked", !ready)
+    button.setAttribute("aria-disabled", String(!ready))
     const name = document.createElement("strong")
     name.textContent = action.title
     const detail = document.createElement("small")
-    detail.textContent = available ? (requirementText(action) || action.result) : "当前维度不可用"
+    detail.textContent = !available
+      ? "当前维度不可用"
+      : missing.length > 0
+        ? `还需 ${missing.map(([key, value]) => `${labels[key] ?? key}≥${value}`).join(" · ")}`
+        : (requirementText(action) || action.result)
     button.append(name, detail)
     return button
   }))
   resetButton.disabled = busy || autoRunning
   autoButton.disabled = busy || autoRunning
   scene.setState(state)
+}
+
+async function playRealmTransition() {
+  realmTransition.hidden = false
+  stage.dataset.cinematic = "true"
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  realmTransition.classList.add("active")
+  await new Promise((resolve) => setTimeout(resolve, reducedMotion ? 180 : 3400))
+  realmTransition.classList.remove("active")
+  delete stage.dataset.cinematic
+  realmTransition.hidden = true
 }
 
 async function request(type, kind, data) {
@@ -151,6 +196,8 @@ async function performAction(actionId, { quiet = false } = {}) {
     return false
   }
   busy = true
+  const previousPhase = state.phase
+  const previousMission = firstRealmMission(state)
   setFeedback(`${action.title}：等待权威状态确认……`, "pending")
   render()
   try {
@@ -166,8 +213,18 @@ async function performAction(actionId, { quiet = false } = {}) {
     revision = message.data.revision
     scene.pulse(actionId)
     playActionSound(actionId)
+    render()
+    if (previousPhase !== state.phase) await playRealmTransition()
+    const currentMission = firstRealmMission(state)
     setFeedback(`${action.title}：${action.result}`, "success")
     addEvent(`${action.title} · ${action.result}`)
+    if (!previousMission.complete && currentMission.complete) {
+      scene.pulse("realm_complete")
+      playActionSound("realm_complete")
+      addEvent("领域锚定完成 · 首次物质循环已经闭合。", "transition")
+      setFeedback("领域锚定完成：物质已经历凝聚、稳定与回收。", "success")
+      return true
+    }
     return true
   } catch (error) {
     setFeedback(error.message, "warning")
@@ -185,6 +242,9 @@ function resetLocal() {
   revision = reset.revision
   eventLog.replaceChildren()
   scene.pulse("reset")
+  realmTransition.classList.remove("active")
+  realmTransition.hidden = true
+  delete stage.dataset.cinematic
   setFeedback("本地宇宙已重开，可以从观察混沌开始。", "success")
   addEvent("零维原点重新形成。")
   render()
@@ -222,7 +282,7 @@ async function start() {
   await control.connect(router)
   const snapshot = await request(TYPES.STATE_REQUESTED, "query", {
     context: context(),
-    fields: ["phase", "dimension", "energy", "information", "entropy", "stability", "fragments", "timeline", "steps"],
+    fields: ["phase", "dimension", "energy", "information", "entropy", "stability", "fragments", "matter", "matterCreated", "matterStabilized", "matterRecycled", "timeline", "steps"],
   })
   if (snapshot.type === TYPES.ERROR) throw new Error(snapshot.data.message)
   state = snapshot.data.state
@@ -252,7 +312,7 @@ autoButton.addEventListener("click", async () => {
   for (const actionId of pack.demo) {
     const completed = await performAction(actionId, { quiet: true })
     if (!completed) break
-    await new Promise((resolve) => setTimeout(resolve, matchMedia("(prefers-reduced-motion: reduce)").matches ? 120 : 720))
+    await new Promise((resolve) => setTimeout(resolve, reducedMotion ? 120 : 720))
   }
   autoRunning = false
   render()

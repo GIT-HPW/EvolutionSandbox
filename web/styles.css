@@ -288,7 +288,7 @@ section {
 
 .section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 #phase-badge { color: #c4b5fd; background: #312e81; border-radius: 999px; padding: 5px 10px; font-size: .78rem; }
-.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .stat { position: relative; overflow: hidden; padding: 13px; border-radius: 12px; background: rgba(30, 41, 59, .72); }
 .stat-meter {
   position: absolute;

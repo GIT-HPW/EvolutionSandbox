@@ -31,6 +31,10 @@
       "entropy": 2,
       "stability": 11,
       "fragments": 0,
+      "matter": 0,
+      "matterCreated": 0,
+      "matterStabilized": 0,
+      "matterRecycled": 0,
       "timeline": "origin",
       "steps": 1
     }

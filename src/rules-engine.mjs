@@ -99,5 +99,5 @@ export function branchTimeline(currentState, name) {
 }
 
 export function statusLine(state) {
-  return `阶段=${state.phase} 维度=${state.dimension} 能量=${state.energy} 信息=${state.information} 熵=${state.entropy} 稳定=${state.stability} 碎片=${state.fragments} 时间线=${state.timeline}`
+  return `阶段=${state.phase} 维度=${state.dimension} 能量=${state.energy} 信息=${state.information} 熵=${state.entropy} 稳定=${state.stability} 碎片=${state.fragments} 物质=${state.matter ?? 0} 时间线=${state.timeline}`
 }

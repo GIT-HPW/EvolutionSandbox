@@ -33,6 +33,14 @@
           <p id="objective">画面只呈现 ESIP 权威端已经确认的状态。</p>
         </section>
 
+        <section id="mission-panel" class="mission-panel" aria-labelledby="mission-title" hidden>
+          <div class="panel-heading">
+            <span id="mission-title">领域锚定任务</span>
+            <span id="mission-status">0 / 3</span>
+          </div>
+          <ol id="mission-steps"></ol>
+        </section>
+
         <section class="narrative-panel" aria-labelledby="narrative-title">
           <div class="panel-heading">
             <span id="narrative-title">宇宙事件流</span>
@@ -60,6 +68,16 @@
           <p>规则和存档没有损坏，可以切换到轻量 WebGL 客户端继续体验。</p>
           <a href="../">打开轻量版</a>
         </aside>
+
+        <section id="realm-transition" class="realm-transition" aria-live="assertive" aria-atomic="true" hidden>
+          <div class="transition-rift" aria-hidden="true"></div>
+          <div class="transition-copy">
+            <p>REALM TRANSITION / AUTHORITY CONFIRMED</p>
+            <h2>零维原点 <span>→</span> 首个三维领域</h2>
+            <div class="transition-track" aria-hidden="true"><i></i></div>
+            <small>正在展开空间坐标与物质法则</small>
+          </div>
+        </section>
 
         <footer>
           <span>BABYLON.JS / LOCAL BUNDLE</span>
