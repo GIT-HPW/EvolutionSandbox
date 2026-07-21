@@ -52,6 +52,7 @@ main { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 52px 0 40
 }
 .hero-title, .hero-intro { min-width: 0; }
 .hero-intro { display: flex; justify-content: flex-end; align-items: flex-end; }
+.hero-links { display: flex; align-items: center; justify-content: flex-end; gap: 14px; flex-wrap: wrap; }
 h1 { margin: 8px 0 0; font-size: clamp(2rem, 3.5vw, 3.2rem); letter-spacing: -.045em; line-height: 1; }
 h2 { margin: 0; font-size: 1rem; letter-spacing: .04em; }
 .eyebrow { color: var(--cyan); letter-spacing: .18em; font-size: .72rem; font-weight: 800; }
@@ -73,6 +74,18 @@ h2 { margin: 0; font-size: 1rem; letter-spacing: .04em; }
   box-shadow: 0 0 14px var(--cyan);
   animation: status-pulse 2.2s ease-in-out infinite;
 }
+.client-switch {
+  padding: 8px 13px;
+  border: 1px solid rgba(77, 233, 255, .42);
+  border-radius: 999px;
+  color: var(--cyan);
+  background: rgba(14, 27, 62, .72);
+  box-shadow: 0 0 20px rgba(77, 233, 255, .08);
+  font-size: .7rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+.client-switch:hover { border-color: var(--cyan); box-shadow: 0 0 24px rgba(77, 233, 255, .18); }
 
 .experience-layout {
   display: grid;

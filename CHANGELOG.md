@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- 增加 `clients/web-babylon` 高精度浏览器客户端垂直切片，提供动漫化能量核心、时间环、碎片、三维领域、镜头、辉光、冲击波和程序化音效。
+- Babylon 客户端复用现有内容包、浏览器 ESIP 权威适配器、control sequence 和 localStorage 存档；基础 WebGL 版继续作为轻量降级入口。
+- 将 Babylon 客户端纳入根 npm workspace、Pages 静态构建、CSP/权威边界测试和 4 MiB 初始 JavaScript 包体预算。
 - 增加 `SidecarStore` 抽象、内存测试实现和本地 journal/checkpoint 持久实现。
 - sidecar 默认在 `runtime/sidecar/` 持久化命令、租约、尝试次数、去重、source sequence、结果和单调 cursor。
 - checkpoint 与 journal 使用版本化 schema、连续 revision 和校验值；损坏、记录缺口或世界绑定冲突时失败关闭。

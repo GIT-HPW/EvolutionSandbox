@@ -5,4 +5,6 @@
 - 可选集成：[`GIT-HPW/openVirFactory`](https://github.com/GIT-HPW/openVirFactory)，GPL-3.0-or-later，不随本仓库捆绑。
 - 开发依赖：`luaparse`，MIT License，仅用于 CI 中的 Lua 语法检查。
 - 开发依赖：`ajv`，MIT License，仅用于 CI 中验证 JSON Schema 和协议示例。
+- 浏览器渲染依赖：`@babylonjs/core`，Apache License 2.0，用于高精度浏览器客户端的场景、材质、动画和后处理。
+- 开发依赖：`esbuild`，MIT License，仅用于把 Babylon 客户端及共享 ESIP 模块打包为同源静态资源。
 - ESIP 事件外壳兼容 [CloudEvents 1.0](https://github.com/cloudevents/spec)，接口说明采用 [AsyncAPI 3.0](https://www.asyncapi.com/)。本仓库未捆绑消息代理或上述规范的实现代码。

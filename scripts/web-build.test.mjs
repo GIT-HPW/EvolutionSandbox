@@ -23,6 +23,7 @@ test("browser build is self-contained and uses the shared rules engine through E
   ])
   assert.match(html, /Content-Security-Policy/)
   assert.match(html, /script-src 'self'/)
+  assert.match(html, /href="(?:\.\/)?babylon\/"/)
   assert.doesNotMatch(html, /\son[a-z]+\s*=/i)
   assert.match(app, /from "\.\/rules-engine\.mjs"/)
   assert.match(app, /fetch\("\.\/origin\.json"\)/)

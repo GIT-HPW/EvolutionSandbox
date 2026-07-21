@@ -9,7 +9,7 @@ content/chapters/*.json
         ↓ 同一确定性状态机
 命令行测试 ── 浏览器游戏权威适配器 ── Luanti evolution_core
                 ↕ MemoryRouter              ↕ evolution_bridge
-           浏览器 UI 控制端      ESIP 0.1 ← 认证回环 HTTP sidecar
+     轻量 WebGL / Babylon 客户端  ESIP 0.1 ← 认证回环 HTTP sidecar
                                                 ↓ Node Adapter / openVirFactory
                                                 ↓ 可替换持久传输
                                            其他游戏适配器
@@ -17,7 +17,7 @@ content/chapters/*.json
 
 内容包定义初始状态、数值边界、阶段、行为和迁移阈值。`src/rules-engine.mjs` 是浏览器与自动测试的参考实现；构建脚本把同一内容包确定性地生成 Lua 表，由 `evolution_core/state.lua` 执行。
 
-浏览器平台与 Luanti 平台分别拥有自己的状态权威。浏览器适配器把多 actor 状态、身份映射、世界时间线注册表、revision、事件历史、序列和最近命令响应保存在 localStorage；Luanti 层把玩家状态和匿名 actor ID 保存在 metadata，把身份映射及时间线注册表保存在 world mod storage，并负责领域、节点和交互界面。两者都不改写章节源，也不访问外部模型。外部 AI 只能经过 openVirFactory 的认证结构化桥，并受命令类型、节点前缀、坐标、批量大小和 metadata 白名单限制。
+浏览器平台与 Luanti 平台分别拥有自己的状态权威。轻量 WebGL 客户端和 `clients/web-babylon` 高精度客户端只负责表现与输入，共用同一个浏览器游戏权威适配器；适配器把多 actor 状态、身份映射、世界时间线注册表、revision、事件历史、序列和最近命令响应保存在 localStorage。Luanti 层把玩家状态和匿名 actor ID 保存在 metadata，把身份映射及时间线注册表保存在 world mod storage，并负责领域、节点和交互界面。各表现客户端都不改写章节源，也不访问外部模型。外部 AI 只能经过 openVirFactory 的认证结构化桥，并受命令类型、节点前缀、坐标、批量大小和 metadata 白名单限制。
 
 ESIP 位于引擎与传输之间。`src/interop/` 提供消息验证、能力适配器、内存参考路由器和本机 HTTP sidecar；正式 sidecar 默认使用带 schema、连续 revision 和校验值的本地 journal/checkpoint 存储，重启后恢复命令、租约、sequence、去重记录、结果和 cursor。`evolution_bridge` 只把经过双重验证的状态查询与固定行为映射到 `evolution_core.api`。`protocol/` 提供独立 schema 和 AsyncAPI。ESIP 不拥有游戏状态，每一份可变状态仍由一个明确平台负责最终写入。
 

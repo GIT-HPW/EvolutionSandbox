@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
+    <meta name="description" content="EvolutionSandbox Babylon.js 动漫化高精度浏览器体验。">
+    <title>EvolutionSandbox · 次世代原点演化</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="stage" aria-label="EvolutionSandbox 高精度宇宙场景">
+        <canvas id="render-canvas" aria-label="可拖动和缩放的动漫风三维宇宙"></canvas>
+        <div class="star-haze" aria-hidden="true"></div>
+        <div class="scanlines" aria-hidden="true"></div>
+
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">EVOLUTION / BABYLON PRESENTATION CLIENT</p>
+            <h1>次世代原点演化</h1>
+          </div>
+          <nav aria-label="客户端切换">
+            <a href="../">轻量版</a>
+            <a href="https://github.com/GIT-HPW/EvolutionSandbox">源码</a>
+          </nav>
+        </header>
+
+        <section class="phase-panel" aria-labelledby="phase-badge">
+          <p id="phase-badge">正在同步宇宙状态……</p>
+          <p id="objective">画面只呈现 ESIP 权威端已经确认的状态。</p>
+        </section>
+
+        <section class="narrative-panel" aria-labelledby="narrative-title">
+          <div class="panel-heading">
+            <span id="narrative-title">宇宙事件流</span>
+            <i>LIVE</i>
+          </div>
+          <ol id="event-log" aria-live="polite"></ol>
+        </section>
+
+        <section class="control-panel" aria-labelledby="control-title">
+          <div class="panel-heading">
+            <span id="control-title">权威行为控制</span>
+            <span>ESIP 0.1</span>
+          </div>
+          <div id="stats" class="stats" aria-live="polite"></div>
+          <p id="feedback" class="feedback" role="status">正在初始化浏览器权威适配器……</p>
+          <div id="actions" class="actions"></div>
+          <div class="utility-actions">
+            <button id="auto-demo" class="primary" type="button">自动演化演示</button>
+            <button id="reset" type="button">重开宇宙</button>
+          </div>
+        </section>
+
+        <aside id="render-fallback" class="fallback" hidden>
+          <strong>高精度3D初始化失败</strong>
+          <p>规则和存档没有损坏，可以切换到轻量 WebGL 客户端继续体验。</p>
+          <a href="../">打开轻量版</a>
+        </aside>
+
+        <footer>
+          <span>BABYLON.JS / LOCAL BUNDLE</span>
+          <span>拖动旋转 · 滚轮缩放 · 状态本地保存</span>
+        </footer>
+      </section>
+    </main>
+  </body>
+</html>
