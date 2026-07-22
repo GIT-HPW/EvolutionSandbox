@@ -1,0 +1,34 @@
+{
+  "$schema": "../../schemas/civilization-spec.schema.json",
+  "schemaVersion": 1,
+  "id": "ember_steppe",
+  "seed": "civ-ember-017",
+  "name": "烬原迁徙文明",
+  "description": "在高温旱原中依靠迁徙、纪律和快速扩张维持生存的文明。",
+  "license": "GPL-3.0-or-later",
+  "origin": {
+    "biome": "ember_steppe",
+    "founderPopulation": 150,
+    "startingEra": "origin",
+    "resources": 310,
+    "knowledge": 8,
+    "ecology": 58,
+    "cohesion": 68
+  },
+  "values": {
+    "knowledge": 48,
+    "ecology": 30,
+    "expansion": 84,
+    "militarism": 66,
+    "collectivism": 52
+  },
+  "autonomy": {
+    "mode": "assisted",
+    "strategyInterval": 40,
+    "allowedIntents": ["resource_policy", "settlement_policy", "cohesion_policy"]
+  },
+  "stopConditions": {
+    "maxTicks": 1000,
+    "haltOnCollapse": true
+  }
+}

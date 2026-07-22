@@ -1,0 +1,34 @@
+{
+  "$schema": "../../schemas/civilization-spec.schema.json",
+  "schemaVersion": 1,
+  "id": "tidal_archive",
+  "seed": "civ-tidal-001",
+  "name": "潮汐档案文明",
+  "description": "诞生于潮汐洞穴，以知识积累和生态平衡为最高价值的海洋文明。",
+  "license": "GPL-3.0-or-later",
+  "origin": {
+    "biome": "ocean_cavern",
+    "founderPopulation": 120,
+    "startingEra": "origin",
+    "resources": 220,
+    "knowledge": 12,
+    "ecology": 88,
+    "cohesion": 74
+  },
+  "values": {
+    "knowledge": 82,
+    "ecology": 78,
+    "expansion": 28,
+    "militarism": 8,
+    "collectivism": 64
+  },
+  "autonomy": {
+    "mode": "autonomous",
+    "strategyInterval": 50,
+    "allowedIntents": ["research_focus", "resource_policy", "settlement_policy", "ecology_policy"]
+  },
+  "stopConditions": {
+    "maxTicks": 1000,
+    "haltOnCollapse": true
+  }
+}
