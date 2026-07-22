@@ -8,12 +8,20 @@ import { build } from "esbuild"
 const clientRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const repositoryRoot = resolve(clientRoot, "..", "..")
 const output = resolve(repositoryRoot, "dist", "site", "babylon")
+const experimentalStellar = process.argv.includes("--experimental-stellar")
 
 await rm(output, { recursive: true, force: true })
 await mkdir(output, { recursive: true })
 await cp(resolve(clientRoot, "public"), output, { recursive: true })
 await cp(resolve(repositoryRoot, "content", "chapters", "origin.json"), resolve(output, "origin.json"))
-await cp(resolve(repositoryRoot, "content", "stellar", "presets", "first-light.json"), resolve(output, "stellar.json"))
+if (experimentalStellar) {
+  await cp(resolve(repositoryRoot, "content", "stellar", "presets", "first-light.json"), resolve(output, "stellar.json"))
+} else {
+  await Promise.all([
+    rm(resolve(output, "stellar.html"), { force: true }),
+    rm(resolve(output, "stellar.css"), { force: true }),
+  ])
+}
 
 async function buildEntry(entry, outfile) {
   return build({
@@ -32,18 +40,19 @@ async function buildEntry(entry, outfile) {
   })
 }
 
-const [originResult, stellarResult] = await Promise.all([
-  buildEntry("app.mjs", "app.js"),
-  buildEntry("stellar-app.mjs", "stellar-app.js"),
-])
+const originResult = await buildEntry("app.mjs", "app.js")
+const stellarResult = experimentalStellar ? await buildEntry("stellar-app.mjs", "stellar-app.js") : undefined
 
-const bytes = [originResult, stellarResult]
+const results = stellarResult ? [originResult, stellarResult] : [originResult]
+const bytes = results
   .flatMap((result) => Object.values(result.metafile.outputs))
   .reduce((total, entry) => total + entry.bytes, 0)
+const entries = experimentalStellar ? ["app.js", "stellar-app.js"] : ["app.js"]
 await writeFile(resolve(output, "build.json"), JSON.stringify({
   client: "@evolution-sandbox/web-babylon",
   schema: 1,
   bundleBytes: bytes,
-  entries: ["app.js", "stellar-app.js"],
+  entries,
+  experimentalStellar,
 }, null, 2) + "\n", "utf8")
-console.log(`Babylon clients built at dist/site/babylon (${Math.ceil(bytes / 1024)} KiB total)`)
+console.log(`Babylon ${experimentalStellar ? "experimental clients" : "public client"} built at dist/site/babylon (${Math.ceil(bytes / 1024)} KiB total)`)

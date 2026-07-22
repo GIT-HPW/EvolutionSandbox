@@ -24,7 +24,7 @@ content/stellar/presets/*.json
         ↓ StellarSpec v1
 src/stellar/ 确定性恒星生命周期 ── StellarController / CLI / 创世重放验证
         ↓ 已确认快照
-Babylon 星辰篇（星云 / 点燃 / 爆发 / 行星盘）
+Babylon 实验星辰篇（默认不进入 Pages 构建）
 ```
 
 文明与恒星内核共享 `src/determinism/prng.mjs` 的 seeded PRNG 和非密码学重放指纹；领域状态、公式和验证器彼此独立。
@@ -33,7 +33,7 @@ Babylon 星辰篇（星云 / 点燃 / 爆发 / 行星盘）
 
 `src/civilization/` 是独立于原点行为状态机的文明模拟内核。它从 `CivilizationSpec` 创建五指标文明状态，使用可保存的 seeded PRNG、整数运算和固定 tick 顺序生成事件、时代里程碑与重放指纹。`CivilizationController` 在其上增加 revision 控制、暂停/倍速/单步、周期快照、导入重放验证和历史分支；`src/interop/civilization-adapter.mjs` 是当前唯一的文明 ESIP 写入口。适配器对外只发送精简快照，完整快照链由权威宿主持久化。AI、定时器和渲染层都不能直接写文明指标。
 
-`src/stellar/` 把 Evolution- 第1章第5篇映射为独立的 StellarSpec 与整数 tick 生命周期。规则从物质云自动经历原恒星、稳定燃烧、红巨星、爆发和行星盘；`StellarController` 拥有暂停、单步、倍速、revision 和本地记录，恢复时从 spec 与 seed 重放到保存 tick。当前 Babylon 星辰页直接调用这个本地权威控制器，尚未宣称跨进程 ESIP 能力；正式 stellar ESIP、持久 sidecar 调度和有差异来源的时间线分支将在后续切片增加。
+`src/stellar/` 把 Evolution- 第1章第5篇映射为独立的 StellarSpec 与整数 tick 生命周期。规则从物质云自动经历原恒星、稳定燃烧、红巨星、爆发和行星盘；`StellarController` 拥有暂停、单步、倍速、revision 和本地记录，恢复时从 spec 与 seed 重放到保存 tick。Babylon 星辰页目前是默认关闭的实验源：普通构建会删除页面和样式，不复制 StellarSpec，也不生成 stellar bundle；只有显式 `build:web:stellar:experimental` 才创建本地预览。正式 stellar ESIP、持久 sidecar 调度和有差异来源的时间线分支将在后续切片增加。
 
 浏览器平台与 Luanti 平台分别拥有自己的状态权威。轻量 WebGL 客户端与 Babylon 原点页共用浏览器游戏权威适配器；适配器把多 actor 状态、物质库存与里程碑、身份映射、世界时间线注册表、revision、事件历史、序列和最近命令响应保存在 localStorage。Babylon 星辰页使用隔离的 StellarController 记录。所有 Babylon 过场、任务面板、物质实体和恒星效果都从已确认快照派生，不保存第二套指标进度。Luanti 层把玩家状态和匿名 actor ID 保存在 metadata，把身份映射及时间线注册表保存在 world mod storage，并负责领域、节点和交互界面。各表现客户端都不改写章节源，也不访问外部模型。外部 AI 只能经过 openVirFactory 的认证结构化桥，并受命令类型、节点前缀、坐标、批量大小和 metadata 白名单限制。
 

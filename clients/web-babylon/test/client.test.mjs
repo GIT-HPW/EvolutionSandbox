@@ -26,6 +26,7 @@ test("Babylon client build is self-contained and keeps ESIP as the authority", a
   assert.match(html, /src="app\.js"/)
   assert.match(html, /id="mission-panel"/)
   assert.match(html, /id="realm-transition"/)
+  assert.doesNotMatch(html, /stellar\.html/)
   assert.doesNotMatch(html, /<(script|link)[^>]+https?:\/\//i)
   assert.doesNotMatch(html, /\son[a-z]+\s*=/i)
   assert.match(styles, /prefers-reduced-motion/)
@@ -41,7 +42,10 @@ test("Babylon client build is self-contained and keeps ESIP as the authority", a
   assert.equal(content.id, "evolution.origin")
   assert.equal(content.initialState.matter, 0)
   assert.equal(content.actions.destroy.requires.matter, 1)
-  assert.equal(JSON.parse(buildInfo).client, "@evolution-sandbox/web-babylon")
+  const built = JSON.parse(buildInfo)
+  assert.equal(built.client, "@evolution-sandbox/web-babylon")
+  assert.deepEqual(built.entries, ["app.js"])
+  assert.equal(built.experimentalStellar, false)
 })
 
 test("first realm mission is derived only from confirmed state milestones", () => {
@@ -57,31 +61,33 @@ test("first realm mission is derived only from confirmed state milestones", () =
   assert.deepEqual(completed.steps.map((step) => step.complete), [true, true, true])
 })
 
-test("stellar client is self-contained and derives visuals from controller snapshots", async () => {
-  const [html, bundle, source, scene, pack, buildInfo] = await Promise.all([
-    readFile(resolve(output, "stellar.html"), "utf8"),
-    readFile(resolve(output, "stellar-app.js"), "utf8"),
+test("experimental stellar sources are validated without entering the public preview", async () => {
+  const [html, styles, source, scene, pack] = await Promise.all([
+    readFile(resolve(clientRoot, "public", "stellar.html"), "utf8"),
+    readFile(resolve(clientRoot, "public", "stellar.css"), "utf8"),
     readFile(resolve(clientRoot, "src", "stellar-app.mjs"), "utf8"),
     readFile(resolve(clientRoot, "src", "stellar-scene.mjs"), "utf8"),
-    readFile(resolve(output, "stellar.json"), "utf8"),
-    readFile(resolve(output, "build.json"), "utf8"),
+    readFile(resolve(repositoryRoot, "content", "stellar", "presets", "first-light.json"), "utf8"),
   ])
   assert.match(html, /Content-Security-Policy/)
   assert.match(html, /src="stellar-app\.js"/)
   assert.match(html, /id="stellar-run"/)
   assert.match(html, /id="stellar-transition"/)
+  assert.match(html, /href="stellar\.css"/)
   assert.doesNotMatch(html, /<(script|link)[^>]+https?:\/\//i)
+  assert.match(styles, /\.stellar-stage/)
   assert.match(source, /StellarController/)
   assert.match(source, /controller\.pulse/)
   assert.match(source, /expectedRevision/)
   assert.match(source, /StellarController\.restore/)
   assert.doesNotMatch(source, /state\.(nebulaMass|stellarMass|corePressure|temperature|luminosity|stability|fuel|elementDiversity|expelledMatter|diskMass|diskStability)\s*[+\-*/]?=/)
   assert.doesNotMatch(scene, /https?:\/\//)
-  assert.ok(bundle.length > 100_000, "Babylon stellar scene should be bundled locally")
   const content = JSON.parse(pack)
   assert.equal(content.id, "first_light")
   assert.equal(content.source.chapter, "第1章 第5篇 星辰：物质的熔炉")
-  assert.deepEqual(JSON.parse(buildInfo).entries, ["app.js", "stellar-app.js"])
+  for (const name of ["stellar.html", "stellar.css", "stellar-app.js", "stellar.json"]) {
+    await assert.rejects(readFile(resolve(output, name), "utf8"), (error) => error.code === "ENOENT")
+  }
 })
 
 test("stellar journey reads only confirmed milestone and completion state", () => {
@@ -107,8 +113,6 @@ test("stellar journey reads only confirmed milestone and completion state", () =
 })
 
 test("Babylon vertical slice stays within its initial JavaScript bundle budget", async () => {
-  for (const name of ["app.js", "stellar-app.js"]) {
-    const bundle = await stat(resolve(output, name))
-    assert.ok(bundle.size < 4 * 1024 * 1024, `${name} is ${bundle.size} bytes; expected less than 4 MiB`)
-  }
+  const bundle = await stat(resolve(output, "app.js"))
+  assert.ok(bundle.size < 4 * 1024 * 1024, `app.js is ${bundle.size} bytes; expected less than 4 MiB`)
 })

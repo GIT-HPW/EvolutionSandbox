@@ -16,6 +16,7 @@
     "check:content": "node scripts/build-content.mjs --check && node scripts/check-civilization-content.mjs && node scripts/check-stellar-content.mjs",
     "build:web:basic": "node scripts/build-web.mjs",
     "build:web:babylon": "npm run build --workspace @evolution-sandbox/web-babylon",
+    "build:web:stellar:experimental": "npm run build:stellar:experimental --workspace @evolution-sandbox/web-babylon",
     "build:web": "npm run build:web:basic && npm run build:web:babylon",
     "demo": "node cli/demo.mjs",
     "demo:civilization": "node cli/civilization-demo.mjs",
