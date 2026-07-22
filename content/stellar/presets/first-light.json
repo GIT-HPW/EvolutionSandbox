@@ -1,0 +1,35 @@
+{
+  "$schema": "../../schemas/stellar-spec.schema.json",
+  "schemaVersion": 1,
+  "id": "first_light",
+  "seed": "stellar-first-light-001",
+  "name": "第一束星光",
+  "description": "从原始物质云开始，经历聚集、原恒星、点燃、稳定燃烧、衰老、爆发和行星盘形成。",
+  "license": "GPL-3.0-or-later",
+  "source": {
+    "repository": "https://github.com/GIT-HPW/Evolution-",
+    "chapter": "第1章 第5篇 星辰：物质的熔炉",
+    "adaptation": "把星辰的向内聚集、向外释放、动态平衡、物质重组和死亡播种转换为可重放的整数 tick 生命周期。"
+  },
+  "origin": {
+    "nebulaMass": 1200,
+    "stellarMass": 20,
+    "temperature": 4,
+    "density": 12,
+    "angularMomentum": 75,
+    "elementDiversity": 1
+  },
+  "physics": {
+    "accretionRate": 10,
+    "contractionRate": 6,
+    "ignitionMass": 170,
+    "ignitionTemperature": 110,
+    "fusionBurnRate": 3,
+    "supernovaMassThreshold": 100,
+    "diskRetention": 65
+  },
+  "stopConditions": {
+    "maxTicks": 220,
+    "haltOnFailure": true
+  }
+}

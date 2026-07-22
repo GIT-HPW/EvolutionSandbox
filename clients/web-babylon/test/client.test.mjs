@@ -6,6 +6,7 @@ import { dirname, resolve } from "node:path"
 import test from "node:test"
 import { fileURLToPath } from "node:url"
 import { firstRealmMission } from "../src/progression.mjs"
+import { stellarJourney } from "../src/stellar-progression.mjs"
 
 const clientRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const repositoryRoot = resolve(clientRoot, "..", "..")
@@ -56,7 +57,58 @@ test("first realm mission is derived only from confirmed state milestones", () =
   assert.deepEqual(completed.steps.map((step) => step.complete), [true, true, true])
 })
 
+test("stellar client is self-contained and derives visuals from controller snapshots", async () => {
+  const [html, bundle, source, scene, pack, buildInfo] = await Promise.all([
+    readFile(resolve(output, "stellar.html"), "utf8"),
+    readFile(resolve(output, "stellar-app.js"), "utf8"),
+    readFile(resolve(clientRoot, "src", "stellar-app.mjs"), "utf8"),
+    readFile(resolve(clientRoot, "src", "stellar-scene.mjs"), "utf8"),
+    readFile(resolve(output, "stellar.json"), "utf8"),
+    readFile(resolve(output, "build.json"), "utf8"),
+  ])
+  assert.match(html, /Content-Security-Policy/)
+  assert.match(html, /src="stellar-app\.js"/)
+  assert.match(html, /id="stellar-run"/)
+  assert.match(html, /id="stellar-transition"/)
+  assert.doesNotMatch(html, /<(script|link)[^>]+https?:\/\//i)
+  assert.match(source, /StellarController/)
+  assert.match(source, /controller\.pulse/)
+  assert.match(source, /expectedRevision/)
+  assert.match(source, /StellarController\.restore/)
+  assert.doesNotMatch(source, /state\.(nebulaMass|stellarMass|corePressure|temperature|luminosity|stability|fuel|elementDiversity|expelledMatter|diskMass|diskStability)\s*[+\-*/]?=/)
+  assert.doesNotMatch(scene, /https?:\/\//)
+  assert.ok(bundle.length > 100_000, "Babylon stellar scene should be bundled locally")
+  const content = JSON.parse(pack)
+  assert.equal(content.id, "first_light")
+  assert.equal(content.source.chapter, "第1章 第5篇 星辰：物质的熔炉")
+  assert.deepEqual(JSON.parse(buildInfo).entries, ["app.js", "stellar-app.js"])
+})
+
+test("stellar journey reads only confirmed milestone and completion state", () => {
+  const pending = stellarJourney({
+    status: "running",
+    milestones: [{ id: "nebula_formed", tick: 0 }, { id: "protostar_formed", tick: 5 }],
+  })
+  assert.equal(pending.completed, 1)
+  assert.equal(pending.complete, false)
+  const complete = stellarJourney({
+    status: "completed",
+    milestones: [
+      { id: "nebula_formed", tick: 0 },
+      { id: "protostar_formed", tick: 5 },
+      { id: "star_ignited", tick: 16 },
+      { id: "main_sequence_completed", tick: 45 },
+      { id: "supernova", tick: 57 },
+      { id: "planetary_disk", tick: 58 },
+    ],
+  })
+  assert.equal(complete.completed, 5)
+  assert.equal(complete.complete, true)
+})
+
 test("Babylon vertical slice stays within its initial JavaScript bundle budget", async () => {
-  const bundle = await stat(resolve(output, "app.js"))
-  assert.ok(bundle.size < 4 * 1024 * 1024, `Babylon bundle is ${bundle.size} bytes; expected less than 4 MiB`)
+  for (const name of ["app.js", "stellar-app.js"]) {
+    const bundle = await stat(resolve(output, name))
+    assert.ok(bundle.size < 4 * 1024 * 1024, `${name} is ${bundle.size} bytes; expected less than 4 MiB`)
+  }
 })

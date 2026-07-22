@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
+    <meta name="description" content="EvolutionSandbox 星辰篇确定性恒星生命周期体验。">
+    <title>EvolutionSandbox · 星辰：物质的熔炉</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="stellar-app.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="stage stellar-stage" aria-label="星辰篇高精度恒星演化场景">
+        <canvas id="render-canvas" aria-label="可拖动和缩放的恒星生命周期场景"></canvas>
+        <div class="star-haze stellar-haze" aria-hidden="true"></div>
+        <div class="scanlines" aria-hidden="true"></div>
+
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">EVOLUTION / CHAPTER 1 PART 5</p>
+            <h1>星辰：物质的熔炉</h1>
+          </div>
+          <nav aria-label="客户端切换">
+            <a href="index.html">原点篇</a>
+            <a href="https://github.com/GIT-HPW/EvolutionSandbox">源码</a>
+          </nav>
+        </header>
+
+        <section class="phase-panel" aria-labelledby="phase-badge">
+          <p id="phase-badge">正在验证恒星记录……</p>
+          <p id="objective">画面只呈现确定性权威控制器已经确认的状态。</p>
+        </section>
+
+        <section id="mission-panel" class="mission-panel stellar-mission-panel" aria-labelledby="mission-title">
+          <div class="panel-heading">
+            <span id="mission-title">恒星生命周期</span>
+            <span id="mission-status">0 / 5</span>
+          </div>
+          <ol id="mission-steps"></ol>
+        </section>
+
+        <section class="narrative-panel" aria-labelledby="narrative-title">
+          <div class="panel-heading">
+            <span id="narrative-title">星辰事件流</span>
+            <i>DETERMINISTIC</i>
+          </div>
+          <ol id="event-log" aria-live="polite"></ol>
+        </section>
+
+        <section class="control-panel stellar-control-panel" aria-labelledby="control-title">
+          <div class="panel-heading">
+            <span id="control-title">时间控制</span>
+            <span>STELLAR STATE v1</span>
+          </div>
+          <div id="stats" class="stats stellar-stats" aria-live="polite"></div>
+          <p id="feedback" class="feedback" role="status">正在加载 StellarSpec……</p>
+          <div id="actions" class="actions stellar-actions">
+            <button id="stellar-run" type="button"><strong>自主演化</strong><small>按当前倍率持续推进</small></button>
+            <button id="stellar-step" type="button"><strong>单步推进</strong><small>暂停时精确推进 1 tick</small></button>
+            <button id="stellar-advance" type="button"><strong>推进 10 tick</strong><small>快速观察下一段变化</small></button>
+            <button id="stellar-speed" type="button"><strong>时间倍率 ×1</strong><small>循环切换 ×1 / ×4 / ×16</small></button>
+          </div>
+          <div class="utility-actions">
+            <button id="stellar-reset" type="button">重置恒星</button>
+          </div>
+        </section>
+
+        <aside id="render-fallback" class="fallback" hidden>
+          <strong>恒星3D场景不可用</strong>
+          <p>确定性规则和本地记录不会因此改变；可以运行命令行演示验证生命周期。</p>
+          <a href="index.html">返回原点篇</a>
+        </aside>
+
+        <section id="stellar-transition" class="realm-transition" aria-live="assertive" aria-atomic="true" hidden>
+          <div class="transition-rift stellar-rift" aria-hidden="true"></div>
+          <div class="transition-copy">
+            <p>STELLAR EXPLOSION / STATE CONFIRMED</p>
+            <h2>星辰边界打开 <span>→</span> 复杂物质播种</h2>
+            <div class="transition-track" aria-hidden="true"><i></i></div>
+            <small>恒星遗产正在进入初生行星盘</small>
+          </div>
+        </section>
+
+        <footer>
+          <span>BABYLON.JS / SEEDED INTEGER SIMULATION</span>
+          <span>拖动旋转 · 滚轮缩放 · 本地记录可验证重放</span>
+        </footer>
+      </section>
+    </main>
+  </body>
+</html>

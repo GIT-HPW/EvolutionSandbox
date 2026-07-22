@@ -13,13 +13,14 @@
   },
   "scripts": {
     "build:content": "node scripts/build-content.mjs",
-    "check:content": "node scripts/build-content.mjs --check && node scripts/check-civilization-content.mjs",
+    "check:content": "node scripts/build-content.mjs --check && node scripts/check-civilization-content.mjs && node scripts/check-stellar-content.mjs",
     "build:web:basic": "node scripts/build-web.mjs",
     "build:web:babylon": "npm run build --workspace @evolution-sandbox/web-babylon",
     "build:web": "npm run build:web:basic && npm run build:web:babylon",
     "demo": "node cli/demo.mjs",
     "demo:civilization": "node cli/civilization-demo.mjs",
     "demo:civilization:control": "node cli/civilization-control-demo.mjs",
+    "demo:stellar": "node cli/stellar-demo.mjs",
     "demo:interop": "node cli/interop-demo.mjs",
     "sidecar": "node cli/sidecar.mjs",
     "sidecar:client": "node cli/sidecar-client.mjs",
@@ -31,7 +32,7 @@
     "check:lua": "node scripts/check-lua.mjs",
     "check:public": "node scripts/check-public-tree.mjs",
     "check": "npm run check:content && npm run check:protocol && npm test && npm run check:lua && npm run check:public",
-    "verify": "npm run check && npm run demo && npm run demo:civilization && npm run demo:civilization:control && npm run demo:interop && npm audit --audit-level=high"
+    "verify": "npm run check && npm run demo && npm run demo:civilization && npm run demo:civilization:control && npm run demo:stellar && npm run demo:interop && npm audit --audit-level=high"
   },
   "devDependencies": {
     "ajv": "^8.17.1",

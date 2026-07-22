@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/content/schemas/stellar-spec.schema.json",
+  "title": "EvolutionSandbox stellar genesis specification",
+  "type": "object",
+  "required": ["schemaVersion", "id", "seed", "name", "description", "license", "source", "origin", "physics", "stopConditions"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{0,63}$" },
+    "seed": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "license": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "source": {
+      "type": "object",
+      "required": ["repository", "chapter", "adaptation"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "chapter": { "const": "第1章 第5篇 星辰：物质的熔炉" },
+        "adaptation": { "type": "string", "minLength": 1, "maxLength": 512 }
+      },
+      "additionalProperties": false
+    },
+    "origin": {
+      "type": "object",
+      "required": ["nebulaMass", "stellarMass", "temperature", "density", "angularMomentum", "elementDiversity"],
+      "properties": {
+        "nebulaMass": { "type": "integer", "minimum": 100, "maximum": 1000000000 },
+        "stellarMass": { "type": "integer", "minimum": 1, "maximum": 1000000000 },
+        "temperature": { "type": "integer", "minimum": 0, "maximum": 1000 },
+        "density": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "angularMomentum": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "elementDiversity": { "type": "integer", "minimum": 1, "maximum": 100 }
+      },
+      "additionalProperties": false
+    },
+    "physics": {
+      "type": "object",
+      "required": ["accretionRate", "contractionRate", "ignitionMass", "ignitionTemperature", "fusionBurnRate", "supernovaMassThreshold", "diskRetention"],
+      "properties": {
+        "accretionRate": { "type": "integer", "minimum": 1, "maximum": 10000 },
+        "contractionRate": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "ignitionMass": { "type": "integer", "minimum": 10, "maximum": 1000000000 },
+        "ignitionTemperature": { "type": "integer", "minimum": 10, "maximum": 1000 },
+        "fusionBurnRate": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "supernovaMassThreshold": { "type": "integer", "minimum": 10, "maximum": 1000000000 },
+        "diskRetention": { "type": "integer", "minimum": 1, "maximum": 100 }
+      },
+      "additionalProperties": false
+    },
+    "stopConditions": {
+      "type": "object",
+      "required": ["maxTicks", "haltOnFailure"],
+      "properties": {
+        "maxTicks": { "type": "integer", "minimum": 50, "maximum": 1000000 },
+        "haltOnFailure": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
