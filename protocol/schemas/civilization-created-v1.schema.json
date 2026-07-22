@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-created-v1.schema.json",
+  "title": "Civilization created event v1",
+  "type": "object",
+  "required": ["context", "commandId", "snapshot"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true }, "required": ["actorId"] }] },
+    "commandId": { "$ref": "context.schema.json#/$defs/id" },
+    "snapshot": { "$ref": "civilization-shared-v1.schema.json#/$defs/snapshot" }
+  },
+  "additionalProperties": false
+}

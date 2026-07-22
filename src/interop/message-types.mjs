@@ -17,6 +17,12 @@ export const TYPES = Object.freeze({
   TIMELINE_JOINED: "io.evolution.timeline.joined.v1",
   TIMELINE_REGISTRY_REQUESTED: "io.evolution.timeline.registry.requested.v1",
   TIMELINE_REGISTRY_SNAPSHOT: "io.evolution.timeline.registry.snapshot.v1",
+  CIVILIZATION_CREATE_REQUESTED: "io.evolution.civilization.create.requested.v1",
+  CIVILIZATION_CREATED: "io.evolution.civilization.created.v1",
+  CIVILIZATION_COMMAND_REQUESTED: "io.evolution.civilization.command.requested.v1",
+  CIVILIZATION_UPDATED: "io.evolution.civilization.updated.v1",
+  CIVILIZATION_SNAPSHOT_REQUESTED: "io.evolution.civilization.snapshot.requested.v1",
+  CIVILIZATION_SNAPSHOT: "io.evolution.civilization.snapshot.v1",
   ERROR: "io.evolution.error.v1",
 })
 
@@ -34,6 +40,12 @@ export const MESSAGE_DEFINITIONS = Object.freeze({
   [TYPES.TIMELINE_JOINED]: { kind: "event", schema: "timeline-joined-v1.schema.json" },
   [TYPES.TIMELINE_REGISTRY_REQUESTED]: { kind: "query", schema: "timeline-registry-requested-v1.schema.json" },
   [TYPES.TIMELINE_REGISTRY_SNAPSHOT]: { kind: "result", schema: "timeline-registry-snapshot-v1.schema.json" },
+  [TYPES.CIVILIZATION_CREATE_REQUESTED]: { kind: "command", schema: "civilization-create-requested-v1.schema.json" },
+  [TYPES.CIVILIZATION_CREATED]: { kind: "event", schema: "civilization-created-v1.schema.json" },
+  [TYPES.CIVILIZATION_COMMAND_REQUESTED]: { kind: "command", schema: "civilization-command-requested-v1.schema.json" },
+  [TYPES.CIVILIZATION_UPDATED]: { kind: "event", schema: "civilization-updated-v1.schema.json" },
+  [TYPES.CIVILIZATION_SNAPSHOT_REQUESTED]: { kind: "query", schema: "civilization-snapshot-requested-v1.schema.json" },
+  [TYPES.CIVILIZATION_SNAPSHOT]: { kind: "result", schema: "civilization-snapshot-v1.schema.json" },
   [TYPES.ERROR]: { kind: "result", schema: "error-v1.schema.json" },
 })
 

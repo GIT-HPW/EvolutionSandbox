@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-snapshot-requested-v1.schema.json",
+  "title": "Civilization snapshot query v1",
+  "type": "object",
+  "required": ["context"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true }, "required": ["actorId"] }] },
+    "recentEvents": { "type": "integer", "minimum": 0, "maximum": 256, "default": 32 }
+  },
+  "additionalProperties": false
+}

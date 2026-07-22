@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-command-requested-v1.schema.json",
+  "title": "Civilization control command v1",
+  "type": "object",
+  "required": ["context", "action", "expectedRevision"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true }, "required": ["actorId"] }] },
+    "action": { "enum": ["advance", "pause", "resume", "step", "set_speed", "branch", "switch_timeline"] },
+    "expectedRevision": { "type": "integer", "minimum": 0 },
+    "ticks": { "type": "integer", "minimum": 1, "maximum": 10000 },
+    "speed": { "type": "integer", "minimum": 1, "maximum": 10000 },
+    "newTimelineId": { "$ref": "context.schema.json#/$defs/id" },
+    "fromTimelineId": { "$ref": "context.schema.json#/$defs/id" },
+    "atTick": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+    "targetTimelineId": { "$ref": "context.schema.json#/$defs/id" }
+  },
+  "allOf": [
+    { "if": { "properties": { "action": { "const": "advance" } }, "required": ["action"] }, "then": { "properties": { "ticks": true }, "required": ["ticks"] } },
+    { "if": { "properties": { "action": { "const": "set_speed" } }, "required": ["action"] }, "then": { "properties": { "speed": true }, "required": ["speed"] } },
+    { "if": { "properties": { "action": { "const": "branch" } }, "required": ["action"] }, "then": { "properties": { "newTimelineId": true }, "required": ["newTimelineId"] } },
+    { "if": { "properties": { "action": { "const": "switch_timeline" } }, "required": ["action"] }, "then": { "properties": { "targetTimelineId": true }, "required": ["targetTimelineId"] } }
+  ],
+  "additionalProperties": false
+}

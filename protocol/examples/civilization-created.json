@@ -1,0 +1,29 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "civilization-created-1",
+  "source": "esip://evolution/civilization-alpha",
+  "type": "io.evolution.civilization.created.v1",
+  "kind": "event",
+  "time": "2026-07-16T23:00:01.000Z",
+  "subject": "civilization/tidal_archive",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-created-v1.schema.json",
+  "sequence": 21,
+  "causationid": "civilization-create-1",
+  "data": {
+    "context": { "universeId": "universe-1", "timelineId": "origin", "realmId": "origin", "actorId": "actor-42" },
+    "commandId": "civilization-create-1",
+    "snapshot": {
+      "schemaVersion": 1,
+      "specId": "tidal_archive",
+      "specHash": "00000000",
+      "revision": 0,
+      "control": { "mode": "paused", "speed": 1 },
+      "activeTimelineId": "origin",
+      "state": { "schemaVersion": 1, "specId": "tidal_archive", "specHash": "00000000", "name": "潮汐档案文明", "tick": 0, "era": "origin", "status": "running", "population": 120, "resources": 220, "knowledge": 12, "ecology": 88, "cohesion": 74, "rngState": 1, "eventCursor": 0, "historyHash": "11111111", "milestones": [{ "id": "founding", "tick": 0 }] },
+      "timelines": [{ "timelineId": "origin", "parentTimelineId": null, "branchTick": 0, "tick": 0, "status": "running", "historyHash": "11111111", "checkpointCount": 1, "latestCheckpointHash": "22222222" }],
+      "recentEvents": []
+    }
+  }
+}

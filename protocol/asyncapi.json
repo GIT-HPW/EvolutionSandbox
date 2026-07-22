@@ -21,6 +21,12 @@
     "timelineJoined": { "address": "io.evolution.timeline.joined.v1", "messages": { "message": { "$ref": "#/components/messages/timelineJoined" } } },
     "timelineRegistryRequested": { "address": "io.evolution.timeline.registry.requested.v1", "messages": { "message": { "$ref": "#/components/messages/timelineRegistryRequested" } } },
     "timelineRegistrySnapshot": { "address": "io.evolution.timeline.registry.snapshot.v1", "messages": { "message": { "$ref": "#/components/messages/timelineRegistrySnapshot" } } },
+    "civilizationCreateRequested": { "address": "io.evolution.civilization.create.requested.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationCreateRequested" } } },
+    "civilizationCreated": { "address": "io.evolution.civilization.created.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationCreated" } } },
+    "civilizationCommandRequested": { "address": "io.evolution.civilization.command.requested.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationCommandRequested" } } },
+    "civilizationUpdated": { "address": "io.evolution.civilization.updated.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationUpdated" } } },
+    "civilizationSnapshotRequested": { "address": "io.evolution.civilization.snapshot.requested.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationSnapshotRequested" } } },
+    "civilizationSnapshot": { "address": "io.evolution.civilization.snapshot.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationSnapshot" } } },
     "error": { "address": "io.evolution.error.v1", "messages": { "message": { "$ref": "#/components/messages/error" } } }
   },
   "components": {
@@ -38,6 +44,12 @@
       "timelineJoined": { "name": "timelineJoined", "x-esip-kind": "event", "payload": { "$ref": "./schemas/timeline-joined-v1.schema.json" } },
       "timelineRegistryRequested": { "name": "timelineRegistryRequested", "x-esip-kind": "query", "payload": { "$ref": "./schemas/timeline-registry-requested-v1.schema.json" } },
       "timelineRegistrySnapshot": { "name": "timelineRegistrySnapshot", "x-esip-kind": "result", "payload": { "$ref": "./schemas/timeline-registry-snapshot-v1.schema.json" } },
+      "civilizationCreateRequested": { "name": "civilizationCreateRequested", "x-esip-kind": "command", "payload": { "$ref": "./schemas/civilization-create-requested-v1.schema.json" } },
+      "civilizationCreated": { "name": "civilizationCreated", "x-esip-kind": "event", "payload": { "$ref": "./schemas/civilization-created-v1.schema.json" } },
+      "civilizationCommandRequested": { "name": "civilizationCommandRequested", "x-esip-kind": "command", "payload": { "$ref": "./schemas/civilization-command-requested-v1.schema.json" } },
+      "civilizationUpdated": { "name": "civilizationUpdated", "x-esip-kind": "event", "payload": { "$ref": "./schemas/civilization-updated-v1.schema.json" } },
+      "civilizationSnapshotRequested": { "name": "civilizationSnapshotRequested", "x-esip-kind": "query", "payload": { "$ref": "./schemas/civilization-snapshot-requested-v1.schema.json" } },
+      "civilizationSnapshot": { "name": "civilizationSnapshot", "x-esip-kind": "result", "payload": { "$ref": "./schemas/civilization-snapshot-v1.schema.json" } },
       "error": { "name": "error", "x-esip-kind": "result", "payload": { "$ref": "./schemas/error-v1.schema.json" } }
     }
   }

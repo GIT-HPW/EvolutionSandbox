@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-updated-v1.schema.json",
+  "title": "Civilization updated event v1",
+  "type": "object",
+  "required": ["context", "commandId", "action", "revision", "snapshot", "events"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true }, "required": ["actorId"] }] },
+    "commandId": { "$ref": "context.schema.json#/$defs/id" },
+    "action": { "enum": ["advance", "pause", "resume", "step", "set_speed", "branch", "switch_timeline"] },
+    "revision": { "type": "integer", "minimum": 0 },
+    "snapshot": { "$ref": "civilization-shared-v1.schema.json#/$defs/snapshot" },
+    "events": { "type": "array", "maxItems": 4096, "items": { "$ref": "civilization-shared-v1.schema.json#/$defs/event" } }
+  },
+  "additionalProperties": false
+}

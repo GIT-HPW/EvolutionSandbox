@@ -2,6 +2,7 @@
 
 export { EsipAdapter } from "./adapter.mjs"
 export { DEFAULT_BROWSER_STORAGE_KEY, createBrowserEvolutionAdapter } from "./browser-game-adapter.mjs"
+export { createCivilizationAdapter } from "./civilization-adapter.mjs"
 export { createMessage } from "./envelope.mjs"
 export { EsipError } from "./errors.mjs"
 export { createEvolutionRulesAdapter } from "./evolution-rules-adapter.mjs"

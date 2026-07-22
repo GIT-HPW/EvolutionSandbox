@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-create-requested-v1.schema.json",
+  "title": "Civilization creation command v1",
+  "type": "object",
+  "required": ["context", "spec"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true }, "required": ["actorId"] }] },
+    "spec": { "$ref": "civilization-spec-v1.schema.json" },
+    "snapshotInterval": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 100 }
+  },
+  "additionalProperties": false
+}

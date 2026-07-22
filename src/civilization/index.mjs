@@ -7,5 +7,11 @@ export {
   createCivilization,
   runCivilization,
 } from "./engine.mjs"
+export {
+  CivilizationController,
+  replayCivilization,
+  validateCivilizationCheckpoint,
+  validateCivilizationControllerRecord,
+} from "./controller.mjs"
 export { hashHex, hashText, nextUint32, randomInt, seedToState } from "./prng.mjs"
 export { CivilizationError, validateCivilizationSpec, validateCivilizationState } from "./validation.mjs"

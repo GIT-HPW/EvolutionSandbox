@@ -1,0 +1,18 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "civilization-snapshot-query-1",
+  "source": "esip://local/control",
+  "target": "esip://evolution/civilization-alpha",
+  "type": "io.evolution.civilization.snapshot.requested.v1",
+  "kind": "query",
+  "time": "2026-07-16T23:00:04.000Z",
+  "subject": "civilization/tidal_archive",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-snapshot-requested-v1.schema.json",
+  "sequence": 24,
+  "data": {
+    "context": { "universeId": "universe-1", "timelineId": "origin", "actorId": "actor-42" },
+    "recentEvents": 16
+  }
+}

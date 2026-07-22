@@ -1,0 +1,30 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "civilization-snapshot-result-1",
+  "source": "esip://evolution/civilization-alpha",
+  "type": "io.evolution.civilization.snapshot.v1",
+  "kind": "result",
+  "time": "2026-07-16T23:00:05.000Z",
+  "subject": "civilization/tidal_archive",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-snapshot-v1.schema.json",
+  "sequence": 25,
+  "causationid": "civilization-snapshot-query-1",
+  "data": {
+    "context": { "universeId": "universe-1", "timelineId": "origin", "realmId": "settlement", "actorId": "actor-42" },
+    "respondingTo": "civilization-snapshot-query-1",
+    "revision": 1,
+    "snapshot": {
+      "schemaVersion": 1,
+      "specId": "tidal_archive",
+      "specHash": "00000000",
+      "revision": 1,
+      "control": { "mode": "paused", "speed": 1 },
+      "activeTimelineId": "origin",
+      "state": { "schemaVersion": 1, "specId": "tidal_archive", "specHash": "00000000", "name": "潮汐档案文明", "tick": 100, "era": "settlement", "status": "running", "population": 220, "resources": 420, "knowledge": 300, "ecology": 90, "cohesion": 80, "rngState": 2, "eventCursor": 1, "historyHash": "33333333", "milestones": [{ "id": "founding", "tick": 0 }, { "id": "era_settlement", "tick": 50 }] },
+      "timelines": [{ "timelineId": "origin", "parentTimelineId": null, "branchTick": 0, "tick": 100, "status": "running", "historyHash": "33333333", "checkpointCount": 2, "latestCheckpointHash": "44444444" }],
+      "recentEvents": [{ "cursor": 1, "tick": 50, "type": "era_transition", "title": "进入聚落时代", "effects": { "era": "settlement" } }]
+    }
+  }
+}

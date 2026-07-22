@@ -1,0 +1,20 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "civilization-advance-1",
+  "source": "esip://local/control",
+  "target": "esip://evolution/civilization-alpha",
+  "type": "io.evolution.civilization.command.requested.v1",
+  "kind": "command",
+  "time": "2026-07-16T23:00:02.000Z",
+  "subject": "civilization/tidal_archive",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-command-requested-v1.schema.json",
+  "sequence": 22,
+  "data": {
+    "context": { "universeId": "universe-1", "timelineId": "origin", "actorId": "actor-42" },
+    "action": "advance",
+    "ticks": 100,
+    "expectedRevision": 0
+  }
+}

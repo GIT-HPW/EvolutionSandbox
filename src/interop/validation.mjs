@@ -2,6 +2,7 @@
 
 import { CLOUD_EVENTS_VERSION, ESIP_VERSION, KINDS, MESSAGE_DEFINITIONS, schemaUrlFor } from "./message-types.mjs"
 import { EsipError } from "./errors.mjs"
+import { validateCivilizationSpec } from "../civilization/validation.mjs"
 
 const TYPE_PATTERN = /^[a-z][a-z0-9]*(?:\.[a-z0-9_]+){2,}\.v[1-9][0-9]*$/
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/
@@ -95,6 +96,125 @@ function requireTimelineEntries(value, path, { allowNull = false } = {}) {
   if (allowNull && value === null) return
   if (!Array.isArray(value) || value.length > 256) throw new EsipError("invalid_message", `${path} must be an array of at most 256 timelines`)
   value.forEach((entry, index) => requireTimelineEntry(entry, `${path}[${index}]`))
+}
+
+function requireCivilizationEvent(value, path) {
+  requireObject(value, path)
+  rejectUnknown(value, ["cursor", "tick", "type", "title", "effects"], path)
+  requireInteger(value.cursor, `${path}.cursor`)
+  requireInteger(value.tick, `${path}.tick`)
+  requireString(value.type, `${path}.type`, { max: 64 })
+  requireString(value.title, `${path}.title`, { max: 128 })
+  requireObject(value.effects, `${path}.effects`)
+}
+
+function requireCivilizationState(value, path) {
+  requireObject(value, path)
+  rejectUnknown(value, [
+    "schemaVersion", "specId", "specHash", "name", "tick", "era", "status",
+    "population", "resources", "knowledge", "ecology", "cohesion", "rngState",
+    "eventCursor", "historyHash", "milestones",
+  ], path)
+  if (value.schemaVersion !== 1) throw new EsipError("invalid_message", `${path}.schemaVersion must be 1`)
+  requireId(value.specId, `${path}.specId`)
+  requireString(value.name, `${path}.name`, { max: 64 })
+  for (const key of ["specHash", "historyHash"]) {
+    requireString(value[key], `${path}.${key}`, { min: 8, max: 8, pattern: /^[0-9a-f]{8}$/ })
+  }
+  for (const key of ["tick", "population", "resources", "knowledge", "rngState", "eventCursor"]) {
+    requireInteger(value[key], `${path}.${key}`)
+  }
+  for (const key of ["ecology", "cohesion"]) requireInteger(value[key], `${path}.${key}`, { max: 100 })
+  if (!["origin", "settlement", "civic", "planetary"].includes(value.era)) {
+    throw new EsipError("invalid_message", `${path}.era is invalid`)
+  }
+  if (!["running", "completed", "collapsed"].includes(value.status)) {
+    throw new EsipError("invalid_message", `${path}.status is invalid`)
+  }
+  if (!Array.isArray(value.milestones) || value.milestones.length < 1 || value.milestones.length > 16) {
+    throw new EsipError("invalid_message", `${path}.milestones must contain 1-16 entries`)
+  }
+  value.milestones.forEach((milestone, index) => {
+    const milestonePath = `${path}.milestones[${index}]`
+    requireObject(milestone, milestonePath)
+    rejectUnknown(milestone, ["id", "tick"], milestonePath)
+    requireString(milestone.id, `${milestonePath}.id`, { max: 64 })
+    requireInteger(milestone.tick, `${milestonePath}.tick`, { max: value.tick })
+  })
+}
+
+function requireCivilizationSnapshot(value, path = "data.snapshot") {
+  requireObject(value, path)
+  rejectUnknown(value, [
+    "schemaVersion", "specId", "specHash", "revision", "control", "activeTimelineId",
+    "state", "timelines", "recentEvents",
+  ], path)
+  if (value.schemaVersion !== 1) throw new EsipError("invalid_message", `${path}.schemaVersion must be 1`)
+  requireId(value.specId, `${path}.specId`)
+  requireString(value.specHash, `${path}.specHash`, { min: 8, max: 8, pattern: /^[0-9a-f]{8}$/ })
+  requireInteger(value.revision, `${path}.revision`)
+  requireObject(value.control, `${path}.control`)
+  rejectUnknown(value.control, ["mode", "speed"], `${path}.control`)
+  if (!["paused", "running"].includes(value.control.mode)) throw new EsipError("invalid_message", `${path}.control.mode is invalid`)
+  requireInteger(value.control.speed, `${path}.control.speed`, { min: 1, max: 10000 })
+  requireId(value.activeTimelineId, `${path}.activeTimelineId`)
+  requireCivilizationState(value.state, `${path}.state`)
+  if (value.specHash !== value.state.specHash || value.specId !== value.state.specId) {
+    throw new EsipError("invalid_message", `${path} does not match its state ownership`)
+  }
+  if (!Array.isArray(value.timelines) || value.timelines.length < 1 || value.timelines.length > 256) {
+    throw new EsipError("invalid_message", `${path}.timelines must contain 1-256 entries`)
+  }
+  let active
+  value.timelines.forEach((timeline, index) => {
+    const timelinePath = `${path}.timelines[${index}]`
+    requireObject(timeline, timelinePath)
+    rejectUnknown(timeline, [
+      "timelineId", "parentTimelineId", "branchTick", "tick", "status", "historyHash",
+      "checkpointCount", "latestCheckpointHash",
+    ], timelinePath)
+    requireId(timeline.timelineId, `${timelinePath}.timelineId`)
+    if (timeline.parentTimelineId !== null) requireId(timeline.parentTimelineId, `${timelinePath}.parentTimelineId`)
+    requireInteger(timeline.branchTick, `${timelinePath}.branchTick`)
+    requireInteger(timeline.tick, `${timelinePath}.tick`, { min: timeline.branchTick })
+    if (!["running", "completed", "collapsed"].includes(timeline.status)) throw new EsipError("invalid_message", `${timelinePath}.status is invalid`)
+    for (const key of ["historyHash", "latestCheckpointHash"]) {
+      requireString(timeline[key], `${timelinePath}.${key}`, { min: 8, max: 8, pattern: /^[0-9a-f]{8}$/ })
+    }
+    requireInteger(timeline.checkpointCount, `${timelinePath}.checkpointCount`, { min: 1 })
+    if (timeline.timelineId === value.activeTimelineId) active = timeline
+  })
+  if (!active || active.tick !== value.state.tick || active.historyHash !== value.state.historyHash) {
+    throw new EsipError("invalid_message", `${path}.activeTimelineId does not identify the supplied state`)
+  }
+  if (!Array.isArray(value.recentEvents) || value.recentEvents.length > 256) {
+    throw new EsipError("invalid_message", `${path}.recentEvents must contain at most 256 entries`)
+  }
+  value.recentEvents.forEach((event, index) => requireCivilizationEvent(event, `${path}.recentEvents[${index}]`))
+}
+
+function requireCivilizationAction(data) {
+  const action = data.action
+  if (!["advance", "pause", "resume", "step", "set_speed", "branch", "switch_timeline"].includes(action)) {
+    throw new EsipError("invalid_message", "data.action is invalid")
+  }
+  if (action === "advance") requireInteger(data.ticks, "data.ticks", { min: 1, max: 10000 })
+  if (action === "set_speed") requireInteger(data.speed, "data.speed", { min: 1, max: 10000 })
+  if (action === "branch") {
+    requireId(data.newTimelineId, "data.newTimelineId")
+    if (data.fromTimelineId !== undefined) requireId(data.fromTimelineId, "data.fromTimelineId")
+    if (data.atTick !== undefined) requireInteger(data.atTick, "data.atTick")
+  }
+  if (action === "switch_timeline") requireId(data.targetTimelineId, "data.targetTimelineId")
+  const allowedByAction = {
+    advance: ["ticks"], set_speed: ["speed"], branch: ["newTimelineId", "fromTimelineId", "atTick"],
+    switch_timeline: ["targetTimelineId"], pause: [], resume: [], step: [],
+  }
+  const supplied = ["ticks", "speed", "newTimelineId", "fromTimelineId", "atTick", "targetTimelineId"]
+    .filter((key) => data[key] !== undefined)
+  if (supplied.some((key) => !allowedByAction[action].includes(key))) {
+    throw new EsipError("invalid_message", `data contains parameters not allowed for action ${action}`)
+  }
 }
 
 function validatePayload(message) {
@@ -201,6 +321,55 @@ function validatePayload(message) {
       requireTimelineEntries(data.timelines, "data.timelines")
       requireTimelineEntries(data.events, "data.events", { allowNull: true })
       if (typeof data.truncated !== "boolean") throw new EsipError("invalid_message", "data.truncated must be boolean")
+      break
+    case "io.evolution.civilization.create.requested.v1":
+      rejectUnknown(data, ["context", "spec", "snapshotInterval"], "data")
+      requireContext(data.context, { actor: true })
+      try { validateCivilizationSpec(data.spec) } catch (error) {
+        throw new EsipError("invalid_message", `data.spec is invalid: ${error.message}`)
+      }
+      if (data.snapshotInterval !== undefined) requireInteger(data.snapshotInterval, "data.snapshotInterval", { min: 1, max: 10000 })
+      break
+    case "io.evolution.civilization.created.v1":
+      rejectUnknown(data, ["context", "commandId", "snapshot"], "data")
+      requireContext(data.context, { actor: true })
+      requireId(data.commandId, "data.commandId")
+      requireCivilizationSnapshot(data.snapshot)
+      break
+    case "io.evolution.civilization.command.requested.v1":
+      rejectUnknown(data, [
+        "context", "action", "expectedRevision", "ticks", "speed", "newTimelineId",
+        "fromTimelineId", "atTick", "targetTimelineId",
+      ], "data")
+      requireContext(data.context, { actor: true })
+      requireInteger(data.expectedRevision, "data.expectedRevision")
+      requireCivilizationAction(data)
+      break
+    case "io.evolution.civilization.updated.v1":
+      rejectUnknown(data, ["context", "commandId", "action", "revision", "snapshot", "events"], "data")
+      requireContext(data.context, { actor: true })
+      requireId(data.commandId, "data.commandId")
+      if (!["advance", "pause", "resume", "step", "set_speed", "branch", "switch_timeline"].includes(data.action)) {
+        throw new EsipError("invalid_message", "data.action is invalid")
+      }
+      requireInteger(data.revision, "data.revision")
+      requireCivilizationSnapshot(data.snapshot)
+      if (data.revision !== data.snapshot.revision) throw new EsipError("invalid_message", "data.revision must match data.snapshot.revision")
+      if (!Array.isArray(data.events) || data.events.length > 4096) throw new EsipError("invalid_message", "data.events must contain at most 4096 entries")
+      data.events.forEach((event, index) => requireCivilizationEvent(event, `data.events[${index}]`))
+      break
+    case "io.evolution.civilization.snapshot.requested.v1":
+      rejectUnknown(data, ["context", "recentEvents"], "data")
+      requireContext(data.context, { actor: true })
+      if (data.recentEvents !== undefined) requireInteger(data.recentEvents, "data.recentEvents", { max: 256 })
+      break
+    case "io.evolution.civilization.snapshot.v1":
+      rejectUnknown(data, ["context", "respondingTo", "revision", "snapshot"], "data")
+      requireContext(data.context, { actor: true })
+      requireId(data.respondingTo, "data.respondingTo")
+      requireInteger(data.revision, "data.revision")
+      requireCivilizationSnapshot(data.snapshot)
+      if (data.revision !== data.snapshot.revision) throw new EsipError("invalid_message", "data.revision must match data.snapshot.revision")
       break
     case "io.evolution.error.v1":
       rejectUnknown(data, ["respondingTo", "code", "message", "retryable"], "data")

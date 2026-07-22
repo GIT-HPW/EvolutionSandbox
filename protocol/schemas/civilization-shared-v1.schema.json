@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-shared-v1.schema.json",
+  "title": "Civilization ESIP shared structures v1",
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{8}$" },
+    "control": {
+      "type": "object",
+      "required": ["mode", "speed"],
+      "properties": {
+        "mode": { "enum": ["paused", "running"] },
+        "speed": { "type": "integer", "minimum": 1, "maximum": 10000 }
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "required": ["cursor", "tick", "type", "title", "effects"],
+      "properties": {
+        "cursor": { "type": "integer", "minimum": 0 },
+        "tick": { "type": "integer", "minimum": 0 },
+        "type": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "effects": { "type": "object", "additionalProperties": { "oneOf": [{ "type": "integer" }, { "type": "string" }] } }
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "required": ["schemaVersion", "specId", "specHash", "name", "tick", "era", "status", "population", "resources", "knowledge", "ecology", "cohesion", "rngState", "eventCursor", "historyHash", "milestones"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "specId": { "$ref": "context.schema.json#/$defs/id" },
+        "specHash": { "$ref": "#/$defs/hash" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "tick": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "era": { "enum": ["origin", "settlement", "civic", "planetary"] },
+        "status": { "enum": ["running", "completed", "collapsed"] },
+        "population": { "type": "integer", "minimum": 0, "maximum": 1000000000 },
+        "resources": { "type": "integer", "minimum": 0, "maximum": 1000000000 },
+        "knowledge": { "type": "integer", "minimum": 0, "maximum": 1000000000 },
+        "ecology": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "cohesion": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "rngState": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "eventCursor": { "type": "integer", "minimum": 0 },
+        "historyHash": { "$ref": "#/$defs/hash" },
+        "milestones": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "required": ["id", "tick"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "tick": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "timeline": {
+      "type": "object",
+      "required": ["timelineId", "parentTimelineId", "branchTick", "tick", "status", "historyHash", "checkpointCount", "latestCheckpointHash"],
+      "properties": {
+        "timelineId": { "$ref": "context.schema.json#/$defs/id" },
+        "parentTimelineId": { "oneOf": [{ "$ref": "context.schema.json#/$defs/id" }, { "type": "null" }] },
+        "branchTick": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "tick": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "status": { "enum": ["running", "completed", "collapsed"] },
+        "historyHash": { "$ref": "#/$defs/hash" },
+        "checkpointCount": { "type": "integer", "minimum": 1 },
+        "latestCheckpointHash": { "$ref": "#/$defs/hash" }
+      },
+      "additionalProperties": false
+    },
+    "snapshot": {
+      "type": "object",
+      "required": ["schemaVersion", "specId", "specHash", "revision", "control", "activeTimelineId", "state", "timelines", "recentEvents"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "specId": { "$ref": "context.schema.json#/$defs/id" },
+        "specHash": { "$ref": "#/$defs/hash" },
+        "revision": { "type": "integer", "minimum": 0 },
+        "control": { "$ref": "#/$defs/control" },
+        "activeTimelineId": { "$ref": "context.schema.json#/$defs/id" },
+        "state": { "$ref": "#/$defs/state" },
+        "timelines": { "type": "array", "minItems": 1, "maxItems": 256, "items": { "$ref": "#/$defs/timeline" } },
+        "recentEvents": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/event" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}
