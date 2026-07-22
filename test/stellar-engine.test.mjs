@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url"
 import {
   advanceStellarSystem,
   createStellarSystem,
+  formatStellarMetric,
   runStellarSystem,
   StellarController,
   StellarError,
@@ -21,6 +22,16 @@ test("first-light preset is valid and records its canonical source", () => {
   const normalized = validateStellarSpec(spec)
   assert.equal(normalized.id, "first_light")
   assert.equal(normalized.source.chapter, "第1章 第5篇 星辰：物质的熔炉")
+})
+
+test("stellar application metrics expose consistent physical display units", () => {
+  assert.deepEqual(formatStellarMetric("stellarMass", 170), {
+    label: "星体质量", unit: "M☉", value: 170, text: "170 M☉",
+  })
+  assert.equal(formatStellarMetric("temperature", 110).text, "110 MK")
+  assert.equal(formatStellarMetric("luminosity", 65).text, "65 万 L☉")
+  assert.equal(formatStellarMetric("diskStability", 100).text, "100 %")
+  assert.throws(() => formatStellarMetric("unknown", 1), TypeError)
 })
 
 test("stellar lifecycle deterministically reaches a stable planetary disk", () => {

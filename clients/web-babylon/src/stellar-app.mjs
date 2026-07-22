@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { StellarController } from "../../../src/stellar/controller.mjs"
+import { formatStellarMetric } from "../../../src/stellar/display.mjs"
 import { validateStellarSpec } from "../../../src/stellar/validation.mjs"
 import { stellarJourney } from "./stellar-progression.mjs"
 import { createStellarScene } from "./stellar-scene.mjs"
@@ -15,16 +16,7 @@ const phases = {
   supernova: ["核心坍缩", "旧边界即将打开，星辰积累的信息将重新进入宇宙。"],
   planetary_disk: ["初生行星盘", "星辰遗产正在旋转、碰撞并寻找能够延续的新结构。"],
 }
-const labels = {
-  stellarMass: "星体质量",
-  corePressure: "核心压力",
-  temperature: "温度",
-  luminosity: "光度",
-  stability: "稳定",
-  elementDiversity: "复杂物质",
-  diskMass: "行星盘质量",
-  diskStability: "行星盘结构",
-}
+const metricIds = ["stellarMass", "corePressure", "temperature", "luminosity", "stability", "elementDiversity", "diskMass", "diskStability"]
 const scales = { stellarMass: 230, corePressure: 250, temperature: 1000, luminosity: 100, stability: 100, elementDiversity: 30, diskMass: 140, diskStability: 100 }
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches
 
@@ -100,13 +92,14 @@ function render() {
   phaseBadge.textContent = `${phase[0]} · tick ${state.tick} · revision ${snapshot.revision}`
   objective.textContent = phase[1]
   renderJourney(state)
-  stats.replaceChildren(...Object.entries(labels).map(([key, label]) => {
+  stats.replaceChildren(...metricIds.map((key) => {
+    const metric = formatStellarMetric(key, state[key])
     const card = document.createElement("div")
     card.className = "stat-card"
     const caption = document.createElement("span")
-    caption.textContent = label
+    caption.textContent = `${metric.label} · ${metric.unit}`
     const value = document.createElement("strong")
-    value.textContent = state[key]
+    value.textContent = metric.value
     const meter = document.createElement("i")
     meter.style.setProperty("--value", Math.min(1, state[key] / scales[key]))
     card.append(caption, value, meter)

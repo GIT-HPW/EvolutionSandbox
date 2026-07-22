@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { hashHex, randomInt, seedToState } from "../determinism/prng.mjs"
+import { formatStellarMetric } from "./display.mjs"
 import { StellarError, validateStellarSpec, validateStellarState } from "./validation.mjs"
 
 const MAX_BATCH_TICKS = 10000
@@ -223,5 +224,6 @@ export function runStellarSystem(input, { ticks } = {}) {
 }
 
 export function stellarStatusLine(state) {
-  return `tick=${state.tick} 阶段=${state.phase} 状态=${state.status} 星体质量=${state.stellarMass} 温度=${state.temperature} 光度=${state.luminosity} 稳定=${state.stability} 元素=${state.elementDiversity} 盘质量=${state.diskMass} hash=${state.historyHash}`
+  const metric = (id) => formatStellarMetric(id, state[id]).text
+  return `tick=${state.tick} 阶段=${state.phase} 状态=${state.status} 星体质量=${metric("stellarMass")} 核心压力=${metric("corePressure")} 温度=${metric("temperature")} 光度=${metric("luminosity")} 稳定=${metric("stability")} 复杂物质=${metric("elementDiversity")} 盘质量=${metric("diskMass")} hash=${state.historyHash}`
 }
