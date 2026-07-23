@@ -10,23 +10,30 @@
 
 现有 `web/` 轻量客户端继续作为低性能设备和 WebGL 失败时的降级入口。旧版浏览器存档会在本地显式迁移，为新增物质状态补零，不会重置已有 revision 或时间线。
 
-在仓库根目录运行：
+## 最速启动
+
+首次克隆后在仓库根目录运行一次：
 
 ```bash
 npm ci
-npm run build:web
-python -m http.server 4173 --directory dist/site
 ```
 
-打开：
-
-- `http://127.0.0.1:4173/babylon/`：公开演化纪元大厅；选择“次世代原点演化”后进入独立场景。
-
-需要仅在本地审阅尚未公开的星辰纵切时，显式执行：
+日常预览当前开发版，包括本地恒星实验场景：
 
 ```bash
 npm run build:web:stellar:experimental
 python -m http.server 4173 --directory dist/site
 ```
 
-再打开 `http://127.0.0.1:4173/babylon/`，从带有“本地实验”标记的阶段卡进入星辰篇。原点篇浏览器存档与基础版共用；实验星辰篇使用独立的可验证控制器记录，两者不会互相覆盖。构建脚本使用白名单生成页面、内容和 bundle；不要把实验开关加入 Pages workflow。
+打开：
+
+- `http://127.0.0.1:4173/babylon/`：本地演化纪元大厅；可选择公开原点篇或带“本地实验”标记的星辰篇。
+
+只生成与 GitHub Pages 一致的公开大厅时，使用：
+
+```bash
+npm run build:web
+python -m http.server 4173 --directory dist/site
+```
+
+首次安装完成后，每次启动只需要“构建 + 静态服务器”两条命令。原点篇浏览器存档与基础版共用；实验星辰篇使用独立的可验证控制器记录，两者不会互相覆盖。构建脚本使用白名单生成页面、内容和 bundle；不要把实验开关加入 Pages workflow。

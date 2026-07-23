@@ -1,7 +1,7 @@
 # virFactory 项目群说明与快速开始指南
 
 > 面向项目使用者和部署人员，不要求阅读或修改源码。
-> 更新日期：2026-07-21
+> 更新日期：2026-07-23
 > 已验证版本：openVirFactory v0.2.1、EvolutionSandbox v0.5.0、Luanti 5.16.0-dev
 >
 > 本文件的正式版本维护在 EvolutionSandbox 仓库；其他仓库只链接到这里，避免多份指南不同步。
@@ -90,24 +90,38 @@ Babylon 动漫化高精度版演化纪元大厅：<https://git-hpw.github.io/Evo
 
 两个客户端不需要账号、Luanti、模型或 API 密钥，轻量版与高精度原点场景共用当前站点的 `localStorage` 权威存档。高精度版先进入阶段选择，再加载独立场景；场景内通过“选项”保存并安全退出。它适合支持硬件加速的桌面和移动浏览器；轻量版保留为加载更快、兼容性更好的入口。清理站点数据或换浏览器后，不会自动恢复原进度。
 
-### 3.2 在本机浏览器运行
+### 3.2 在本机浏览器最速启动
 
-在项目根目录打开 PowerShell：
+首次克隆后，在项目根目录打开 PowerShell 安装依赖：
 
 ```powershell
 cd .\EvolutionSandbox
 npm ci
+```
+
+日常预览当前开发版，包括默认不公开的本地恒星实验场景：
+
+```powershell
+npm run build:web:stellar:experimental
+python -m http.server 4173 --directory dist/site
+```
+
+然后打开高精度版阶段选择大厅：<http://127.0.0.1:4173/babylon/>
+
+首次安装完成后，日常启动只需要上面两条命令。需要检查与 GitHub Pages 完全一致的公开产物时，改为：
+
+```powershell
 npm run build:web
 python -m http.server 4173 --directory dist/site
 ```
 
-然后打开：<http://127.0.0.1:4173/>
+公开轻量版地址：<http://127.0.0.1:4173/>
 
-高精度版阶段选择地址：<http://127.0.0.1:4173/babylon/>
+公开高精度版阶段选择地址：<http://127.0.0.1:4173/babylon/>
 
 停止本地网页服务时，在 PowerShell 中按 `Ctrl+C`。
 
-不要直接双击 `dist/site/index.html`；页面使用 ES 模块和内容包请求，需要通过本地 HTTP 服务访问。
+不要直接双击 `dist/site/index.html`；页面使用 ES 模块和内容包请求，需要通过本地 HTTP 服务访问。实验构建只用于本机预览，不要把它加入 Pages workflow。
 
 ### 3.3 基本玩法
 
