@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import assert from "node:assert/strict"
-import { readFile, stat } from "node:fs/promises"
+import { readFile, readdir, stat } from "node:fs/promises"
 import { dirname, resolve } from "node:path"
 import test from "node:test"
 import { fileURLToPath } from "node:url"
@@ -13,24 +13,34 @@ const repositoryRoot = resolve(clientRoot, "..", "..")
 const output = resolve(repositoryRoot, "dist", "site", "babylon")
 
 test("Babylon client build is self-contained and keeps ESIP as the authority", async () => {
-  const [html, styles, bundle, source, pack, buildInfo] = await Promise.all([
+  const [lobby, html, styles, menuBundle, bundle, source, pack, sceneManifest, buildInfo] = await Promise.all([
     readFile(resolve(output, "index.html"), "utf8"),
+    readFile(resolve(output, "origin.html"), "utf8"),
     readFile(resolve(output, "styles.css"), "utf8"),
+    readFile(resolve(output, "menu.js"), "utf8"),
     readFile(resolve(output, "app.js"), "utf8"),
     readFile(resolve(clientRoot, "src", "app.mjs"), "utf8"),
     readFile(resolve(output, "origin.json"), "utf8"),
+    readFile(resolve(output, "scenes.json"), "utf8"),
     readFile(resolve(output, "build.json"), "utf8"),
   ])
+  assert.match(lobby, /src="menu\.js"/)
+  assert.match(lobby, /id="stage-grid"/)
+  assert.doesNotMatch(lobby, /stellar/i)
   assert.match(html, /Content-Security-Policy/)
   assert.match(html, /script-src 'self'/)
   assert.match(html, /src="app\.js"/)
   assert.match(html, /id="mission-panel"/)
   assert.match(html, /id="realm-transition"/)
+  assert.match(html, /id="game-options"/)
+  assert.match(html, /id="options-exit"/)
   assert.doesNotMatch(html, /stellar\.html/)
   assert.doesNotMatch(html, /<(script|link)[^>]+https?:\/\//i)
   assert.doesNotMatch(html, /\son[a-z]+\s*=/i)
   assert.match(styles, /prefers-reduced-motion/)
   assert.match(styles, /@keyframes transition-rift/)
+  assert.match(styles, /\.options-overlay/)
+  assert.match(menuBundle, /evolution-sandbox\.scene-flow\.v1/)
   assert.match(source, /createBrowserEvolutionAdapter/)
   assert.match(source, /TYPES\.ACTION_REQUESTED/)
   assert.match(source, /expectedRevision: revision/)
@@ -42,10 +52,29 @@ test("Babylon client build is self-contained and keeps ESIP as the authority", a
   assert.equal(content.id, "evolution.origin")
   assert.equal(content.initialState.matter, 0)
   assert.equal(content.actions.destroy.requires.matter, 1)
+  const availableScenes = JSON.parse(sceneManifest)
+  assert.equal(availableScenes.profile, "public")
+  assert.deepEqual(availableScenes.scenes.map((scene) => scene.id), ["origin"])
+  assert.doesNotMatch(sceneManifest, /stellar/i)
   const built = JSON.parse(buildInfo)
   assert.equal(built.client, "@evolution-sandbox/web-babylon")
-  assert.deepEqual(built.entries, ["app.js"])
+  assert.equal(built.schema, 2)
+  assert.equal(built.profile, "public")
+  assert.deepEqual(built.entries, ["menu.js", "app.js"])
+  assert.deepEqual(built.scenes, ["origin"])
   assert.equal(built.experimentalStellar, false)
+
+  assert.deepEqual((await readdir(output)).sort(), [
+    "app.js",
+    "build.json",
+    "index.html",
+    "menu.css",
+    "menu.js",
+    "origin.html",
+    "origin.json",
+    "scenes.json",
+    "styles.css",
+  ])
 })
 
 test("first realm mission is derived only from confirmed state milestones", () => {
@@ -73,6 +102,8 @@ test("experimental stellar sources are validated without entering the public pre
   assert.match(html, /src="stellar-app\.js"/)
   assert.match(html, /id="stellar-run"/)
   assert.match(html, /id="stellar-transition"/)
+  assert.match(html, /id="game-options"/)
+  assert.match(html, /id="options-exit"/)
   assert.match(html, /href="stellar\.css"/)
   assert.doesNotMatch(html, /<(script|link)[^>]+https?:\/\//i)
   assert.match(styles, /\.stellar-stage/)

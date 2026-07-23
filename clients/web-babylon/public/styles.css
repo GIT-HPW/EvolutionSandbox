@@ -84,7 +84,7 @@ button, a { font: inherit; }
 .topbar h1 { margin: 6px 0 0; font-size: clamp(1.8rem, 3.6vw, 3.6rem); line-height: .95; letter-spacing: -.055em; text-shadow: 0 0 38px rgba(83, 236, 255, .25); }
 .eyebrow { margin: 0; color: var(--cyan); font-size: .68rem; font-weight: 800; letter-spacing: .2em; }
 .topbar nav { display: flex; gap: 8px; pointer-events: auto; }
-.topbar a, .fallback a {
+.topbar a, .topbar-button, .fallback a {
   color: #dfeaff;
   padding: 8px 13px;
   border: 1px solid var(--stroke);
@@ -94,7 +94,8 @@ button, a { font: inherit; }
   font-size: .75rem;
   backdrop-filter: blur(12px);
 }
-.topbar a:hover, .fallback a:hover { border-color: var(--cyan); color: var(--cyan); }
+.topbar-button { cursor: pointer; }
+.topbar a:hover, .topbar-button:hover:not(:disabled), .fallback a:hover { border-color: var(--cyan); color: var(--cyan); }
 
 .phase-panel {
   position: absolute;
@@ -163,6 +164,16 @@ button:disabled { cursor: wait; opacity: .55; }
 
 .fallback { position: absolute; z-index: 30; left: 50%; top: 50%; width: min(420px, calc(100% - 40px)); padding: 28px; border: 1px solid var(--rose); border-radius: 18px; background: rgba(10, 7, 26, .94); transform: translate(-50%, -50%); text-align: center; }
 .fallback p { color: #aebbd4; line-height: 1.6; }
+
+.options-overlay { position: absolute; z-index: 45; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(2, 3, 12, .78); backdrop-filter: blur(14px); }
+.options-overlay[hidden] { display: none; }
+.options-dialog { width: min(480px, 100%); padding: clamp(26px, 5vw, 42px); border: 1px solid rgba(83, 236, 255, .38); border-radius: 10px 34px 10px 10px; background: linear-gradient(145deg, rgba(13, 26, 62, .97), rgba(6, 8, 25, .98)); box-shadow: 0 30px 110px rgba(0, 0, 0, .65), 0 0 42px rgba(83, 236, 255, .08); }
+.options-dialog h2 { margin: 9px 0 12px; font-size: clamp(1.8rem, 5vw, 2.7rem); }
+.options-dialog > p:not(.eyebrow) { min-height: 44px; margin: 0 0 18px; color: #aebfe0; font-size: .78rem; line-height: 1.6; }
+.options-dialog > small { display: block; margin-top: 18px; color: #7186aa; line-height: 1.6; }
+.options-actions { display: grid; gap: 8px; }
+.options-actions button { min-height: 44px; padding: 10px 14px; text-align: left; }
+.options-actions .primary { border-color: rgba(83, 236, 255, .52); color: var(--cyan); }
 
 .realm-transition { position: absolute; z-index: 26; inset: 0; display: grid; place-items: center; overflow: hidden; pointer-events: none; background: rgba(2, 3, 14, .3); opacity: 0; }
 .realm-transition[hidden] { display: none; }

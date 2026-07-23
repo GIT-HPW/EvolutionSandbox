@@ -1,27 +1,43 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { cp, mkdir, rm, writeFile } from "node:fs/promises"
+import { copyFile, mkdir, rm, writeFile } from "node:fs/promises"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { build } from "esbuild"
+import { publicSceneDescriptor, scenesForProfile } from "../config/scenes.mjs"
 
 const clientRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const repositoryRoot = resolve(clientRoot, "..", "..")
 const output = resolve(repositoryRoot, "dist", "site", "babylon")
 const experimentalStellar = process.argv.includes("--experimental-stellar")
+const profile = experimentalStellar ? "experimental" : "public"
+const scenes = scenesForProfile(profile)
 
 await rm(output, { recursive: true, force: true })
 await mkdir(output, { recursive: true })
-await cp(resolve(clientRoot, "public"), output, { recursive: true })
-await cp(resolve(repositoryRoot, "content", "chapters", "origin.json"), resolve(output, "origin.json"))
-if (experimentalStellar) {
-  await cp(resolve(repositoryRoot, "content", "stellar", "presets", "first-light.json"), resolve(output, "stellar.json"))
-} else {
-  await Promise.all([
-    rm(resolve(output, "stellar.html"), { force: true }),
-    rm(resolve(output, "stellar.css"), { force: true }),
-  ])
+await Promise.all([
+  copyFile(resolve(clientRoot, "public", "index.html"), resolve(output, "index.html")),
+  copyFile(resolve(clientRoot, "public", "menu.css"), resolve(output, "menu.css")),
+])
+
+const copiedStyles = new Set()
+for (const scene of scenes) {
+  await copyFile(resolve(clientRoot, "public", scene.page), resolve(output, scene.page))
+  for (const stylesheet of scene.styles) {
+    if (copiedStyles.has(stylesheet)) continue
+    await copyFile(resolve(clientRoot, "public", stylesheet), resolve(output, stylesheet))
+    copiedStyles.add(stylesheet)
+  }
+  for (const content of scene.content) {
+    await copyFile(resolve(repositoryRoot, content.source), resolve(output, content.output))
+  }
 }
+
+await writeFile(resolve(output, "scenes.json"), JSON.stringify({
+  schemaVersion: 1,
+  profile,
+  scenes: scenes.map(publicSceneDescriptor),
+}, null, 2) + "\n", "utf8")
 
 async function buildEntry(entry, outfile) {
   return build({
@@ -40,19 +56,21 @@ async function buildEntry(entry, outfile) {
   })
 }
 
-const originResult = await buildEntry("app.mjs", "app.js")
-const stellarResult = experimentalStellar ? await buildEntry("stellar-app.mjs", "stellar-app.js") : undefined
-
-const results = stellarResult ? [originResult, stellarResult] : [originResult]
+const menuResult = await buildEntry("menu.mjs", "menu.js")
+const sceneResults = []
+for (const scene of scenes) sceneResults.push(await buildEntry(scene.sourceEntry, scene.bundle))
+const results = [menuResult, ...sceneResults]
 const bytes = results
   .flatMap((result) => Object.values(result.metafile.outputs))
   .reduce((total, entry) => total + entry.bytes, 0)
-const entries = experimentalStellar ? ["app.js", "stellar-app.js"] : ["app.js"]
+const entries = ["menu.js", ...scenes.map((scene) => scene.bundle)]
 await writeFile(resolve(output, "build.json"), JSON.stringify({
   client: "@evolution-sandbox/web-babylon",
-  schema: 1,
+  schema: 2,
+  profile,
   bundleBytes: bytes,
   entries,
+  scenes: scenes.map((scene) => scene.id),
   experimentalStellar,
 }, null, 2) + "\n", "utf8")
-console.log(`Babylon ${experimentalStellar ? "experimental clients" : "public client"} built at dist/site/babylon (${Math.ceil(bytes / 1024)} KiB total)`)
+console.log(`Babylon ${profile} scene lobby built at dist/site/babylon (${Math.ceil(bytes / 1024)} KiB total)`)

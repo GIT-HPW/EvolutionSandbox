@@ -8,6 +8,7 @@ import { MemoryRouter } from "../../../src/interop/router.mjs"
 import { playActionSound } from "./audio.mjs"
 import { firstRealmMission } from "./progression.mjs"
 import { createAnimeUniverse } from "./scene.mjs"
+import { bindSceneOptions } from "./scene-flow.mjs"
 
 const GAME_SOURCE = "esip://browser/sandbox"
 const CONTROL_SOURCE = "esip://browser/control"
@@ -45,8 +46,10 @@ let state
 let revision = 0
 let busy = true
 let autoRunning = false
+let menuSuspended = false
 let game
 let control
+let sceneOptions
 
 if (!scene.supported) fallback.hidden = false
 
@@ -136,7 +139,7 @@ function render() {
     const available = action.availableIn.includes(state.phase)
     const missing = missingRequirements(action)
     const ready = available && missing.length === 0
-    button.disabled = busy || autoRunning || !ready
+    button.disabled = busy || autoRunning || menuSuspended || !ready
     button.classList.toggle("locked", !ready)
     button.setAttribute("aria-disabled", String(!ready))
     const name = document.createElement("strong")
@@ -150,8 +153,9 @@ function render() {
     button.append(name, detail)
     return button
   }))
-  resetButton.disabled = busy || autoRunning
-  autoButton.disabled = busy || autoRunning
+  resetButton.disabled = busy || autoRunning || menuSuspended
+  autoButton.disabled = busy || autoRunning || menuSuspended
+  sceneOptions?.setAvailable(!busy)
   scene.setState(state)
 }
 
@@ -291,31 +295,56 @@ async function start() {
   addEvent(revision === 0 ? "原始能量信息体苏醒。" : `已恢复本地宇宙 revision ${revision}。`)
   setFeedback("拖动场景调整视角，滚轮缩放；所有行为均由 ESIP 权威端确认。")
   render()
+  if (!sceneOptions.markReady()) return
 }
 
 actions.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]")
-  if (!button || busy || autoRunning) return
+  if (!button || busy || autoRunning || menuSuspended) return
   performAction(button.dataset.action)
 })
 
 resetButton.addEventListener("click", () => {
-  if (!busy && !autoRunning) resetLocal()
+  if (!busy && !autoRunning && !menuSuspended) resetLocal()
 })
 
 autoButton.addEventListener("click", async () => {
-  if (busy || autoRunning) return
+  if (busy || autoRunning || menuSuspended) return
   autoRunning = true
   if (state.phase !== "origin_0d" || state.steps !== 0) resetLocal()
   render()
   setFeedback("自动演化正在执行：观察 → 撕裂 → 大爆炸", "pending")
   for (const actionId of pack.demo) {
+    if (menuSuspended) break
     const completed = await performAction(actionId, { quiet: true })
     if (!completed) break
     await new Promise((resolve) => setTimeout(resolve, reducedMotion ? 120 : 720))
+    if (menuSuspended) break
   }
   autoRunning = false
   render()
+})
+
+sceneOptions = bindSceneOptions({
+  sceneId: "origin",
+  onPause() {
+    menuSuspended = true
+    autoRunning = false
+    render()
+  },
+  onResume() {
+    menuSuspended = false
+    render()
+  },
+  checkpoint() {
+    if (!state) throw new Error("权威状态尚未就绪")
+    return {
+      revision,
+      tick: state.steps,
+      phase: state.phase,
+      timeline: state.timeline,
+    }
+  },
 })
 
 start().catch((error) => {

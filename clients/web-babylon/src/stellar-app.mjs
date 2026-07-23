@@ -3,6 +3,7 @@
 import { StellarController } from "../../../src/stellar/controller.mjs"
 import { formatStellarMetric } from "../../../src/stellar/display.mjs"
 import { validateStellarSpec } from "../../../src/stellar/validation.mjs"
+import { bindSceneOptions } from "./scene-flow.mjs"
 import { stellarJourney } from "./stellar-progression.mjs"
 import { createStellarScene } from "./stellar-scene.mjs"
 
@@ -44,6 +45,8 @@ let controller
 let busy = true
 let timer
 let cinematic = false
+let menuSuspended = false
+let sceneOptions
 
 if (!scene.supported) fallback.hidden = false
 
@@ -109,11 +112,12 @@ function render() {
   const stopped = state.status !== "running"
   runButton.textContent = running ? "暂停演化" : stopped ? "演化已完成" : "自主演化"
   speedButton.textContent = `时间倍率 ×${snapshot.control.speed}`
-  runButton.disabled = busy || stopped
-  stepButton.disabled = busy || stopped || running
-  advanceButton.disabled = busy || stopped || running
-  speedButton.disabled = busy || stopped
-  resetButton.disabled = busy
+  runButton.disabled = busy || menuSuspended || stopped
+  stepButton.disabled = busy || menuSuspended || stopped || running
+  advanceButton.disabled = busy || menuSuspended || stopped || running
+  speedButton.disabled = busy || menuSuspended || stopped
+  resetButton.disabled = busy || menuSuspended
+  sceneOptions?.setAvailable(!busy && !cinematic)
   scene.setState(state)
 }
 
@@ -129,6 +133,7 @@ async function playExplosion() {
   delete stage.dataset.cinematic
   transition.hidden = true
   cinematic = false
+  render()
   schedule()
 }
 
@@ -149,7 +154,7 @@ function applyResult(result) {
 }
 
 async function mutate(operation) {
-  if (!controller || busy || cinematic) return
+  if (!controller || busy || cinematic || menuSuspended) return
   busy = true
   render()
   try {
@@ -167,7 +172,7 @@ async function mutate(operation) {
 
 function schedule() {
   clearTimeout(timer)
-  if (!controller || busy) return
+  if (!controller || busy || menuSuspended) return
   const snapshot = controller.snapshot()
   if (snapshot.control.mode !== "running" || snapshot.state.status !== "running") return
   timer = setTimeout(() => {
@@ -209,6 +214,31 @@ speedButton.addEventListener("click", () => {
 })
 resetButton.addEventListener("click", reset)
 
+sceneOptions = bindSceneOptions({
+  sceneId: "stellar",
+  onPause() {
+    menuSuspended = true
+    clearTimeout(timer)
+    render()
+  },
+  onResume() {
+    menuSuspended = false
+    render()
+    schedule()
+  },
+  checkpoint() {
+    if (!controller) throw new Error("恒星权威状态尚未就绪")
+    save()
+    const snapshot = controller.snapshot()
+    return {
+      revision: snapshot.revision,
+      tick: snapshot.state.tick,
+      phase: snapshot.state.phase,
+      stateHash: snapshot.state.historyHash,
+    }
+  },
+})
+
 async function start() {
   spec = validateStellarSpec(await fetch("./stellar.json").then((response) => {
     if (!response.ok) throw new Error(`恒星内容包加载失败：HTTP ${response.status}`)
@@ -222,6 +252,7 @@ async function start() {
   addEvent(stored === null ? "原始物质云开始聚集。" : `已验证并恢复 tick ${snapshot.state.tick} 的恒星记录。`)
   setFeedback("所有画面均由确定性权威快照派生；可以暂停、单步或选择时间倍率。")
   render()
+  if (!sceneOptions.markReady()) return
   schedule()
 }
 

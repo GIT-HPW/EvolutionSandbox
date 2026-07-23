@@ -23,8 +23,8 @@
             <p class="eyebrow">EVOLUTION / CHAPTER 1 PART 5</p>
             <h1>星辰：物质的熔炉</h1>
           </div>
-          <nav aria-label="客户端切换">
-            <a href="index.html">原点篇</a>
+          <nav aria-label="游戏菜单">
+            <button id="game-options" class="topbar-button" type="button" disabled>选项</button>
             <a href="https://github.com/GIT-HPW/EvolutionSandbox">源码</a>
           </nav>
         </header>
@@ -71,7 +71,6 @@
         <aside id="render-fallback" class="fallback" hidden>
           <strong>恒星3D场景不可用</strong>
           <p>确定性规则和本地记录不会因此改变；可以运行命令行演示验证生命周期。</p>
-          <a href="index.html">返回原点篇</a>
         </aside>
 
         <section id="stellar-transition" class="realm-transition" aria-live="assertive" aria-atomic="true" hidden>
@@ -81,6 +80,20 @@
             <h2>星辰边界打开 <span>→</span> 复杂物质播种</h2>
             <div class="transition-track" aria-hidden="true"><i></i></div>
             <small>恒星遗产正在进入初生行星盘</small>
+          </div>
+        </section>
+
+        <section id="game-options-menu" class="options-overlay" hidden>
+          <div class="options-dialog" role="dialog" aria-modal="true" aria-labelledby="options-title">
+            <p class="eyebrow">SCENE CONTROL / CHECKPOINT REQUIRED</p>
+            <h2 id="options-title">场景选项</h2>
+            <p id="options-status" role="status">场景已暂停。</p>
+            <div class="options-actions">
+              <button id="options-resume" class="primary" type="button">继续当前场景</button>
+              <button id="options-save" type="button">保存检查点</button>
+              <button id="options-exit" type="button">保存并返回阶段选择</button>
+            </div>
+            <small>实验场景保持隔离；退出后只能从本地实验大厅重新进入。</small>
           </div>
         </section>
 

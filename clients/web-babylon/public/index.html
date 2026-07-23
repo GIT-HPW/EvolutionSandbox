@@ -5,85 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="dark">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
-    <meta name="description" content="EvolutionSandbox Babylon.js 动漫化高精度浏览器体验。">
-    <title>EvolutionSandbox · 次世代原点演化</title>
-    <link rel="stylesheet" href="styles.css">
-    <script type="module" src="app.js"></script>
+    <meta name="description" content="EvolutionSandbox 宇宙演化阶段选择。">
+    <title>EvolutionSandbox · 演化纪元</title>
+    <link rel="stylesheet" href="menu.css">
+    <script type="module" src="menu.js"></script>
   </head>
   <body>
-    <main class="app-shell">
-      <section class="stage" aria-label="EvolutionSandbox 高精度宇宙场景">
-        <canvas id="render-canvas" aria-label="可拖动和缩放的动漫风三维宇宙"></canvas>
-        <div class="star-haze" aria-hidden="true"></div>
-        <div class="scanlines" aria-hidden="true"></div>
+    <main class="lobby-shell">
+      <header class="lobby-header">
+        <div>
+          <p class="eyebrow">EVOLUTION / CONTROLLED SCENE LOBBY</p>
+          <h1>选择演化纪元</h1>
+          <p class="lobby-intro">每个纪元拥有独立的运行环境。进入后，页面切换只由场景控制器和已确认检查点触发。</p>
+        </div>
+        <nav aria-label="项目导航">
+          <a href="../">轻量版</a>
+          <a href="https://github.com/GIT-HPW/EvolutionSandbox">源码</a>
+        </nav>
+      </header>
 
-        <header class="topbar">
+      <section aria-labelledby="stage-title">
+        <div class="section-heading">
           <div>
-            <p class="eyebrow">EVOLUTION / BABYLON PRESENTATION CLIENT</p>
-            <h1>次世代原点演化</h1>
+            <p>WORLD TIMELINE</p>
+            <h2 id="stage-title">可进入阶段</h2>
           </div>
-          <nav aria-label="客户端切换">
-            <a href="../">轻量版</a>
-            <a href="https://github.com/GIT-HPW/EvolutionSandbox">源码</a>
-          </nav>
-        </header>
-
-        <section class="phase-panel" aria-labelledby="phase-badge">
-          <p id="phase-badge">正在同步宇宙状态……</p>
-          <p id="objective">画面只呈现 ESIP 权威端已经确认的状态。</p>
-        </section>
-
-        <section id="mission-panel" class="mission-panel" aria-labelledby="mission-title" hidden>
-          <div class="panel-heading">
-            <span id="mission-title">领域锚定任务</span>
-            <span id="mission-status">0 / 3</span>
-          </div>
-          <ol id="mission-steps"></ol>
-        </section>
-
-        <section class="narrative-panel" aria-labelledby="narrative-title">
-          <div class="panel-heading">
-            <span id="narrative-title">宇宙事件流</span>
-            <i>LIVE</i>
-          </div>
-          <ol id="event-log" aria-live="polite"></ol>
-        </section>
-
-        <section class="control-panel" aria-labelledby="control-title">
-          <div class="panel-heading">
-            <span id="control-title">权威行为控制</span>
-            <span>ESIP 0.1</span>
-          </div>
-          <div id="stats" class="stats" aria-live="polite"></div>
-          <p id="feedback" class="feedback" role="status">正在初始化浏览器权威适配器……</p>
-          <div id="actions" class="actions"></div>
-          <div class="utility-actions">
-            <button id="auto-demo" class="primary" type="button">自动演化演示</button>
-            <button id="reset" type="button">重开宇宙</button>
-          </div>
-        </section>
-
-        <aside id="render-fallback" class="fallback" hidden>
-          <strong>高精度3D初始化失败</strong>
-          <p>规则和存档没有损坏，可以切换到轻量 WebGL 客户端继续体验。</p>
-          <a href="../">打开轻量版</a>
-        </aside>
-
-        <section id="realm-transition" class="realm-transition" aria-live="assertive" aria-atomic="true" hidden>
-          <div class="transition-rift" aria-hidden="true"></div>
-          <div class="transition-copy">
-            <p>REALM TRANSITION / AUTHORITY CONFIRMED</p>
-            <h2>零维原点 <span>→</span> 首个三维领域</h2>
-            <div class="transition-track" aria-hidden="true"><i></i></div>
-            <small>正在展开空间坐标与物质法则</small>
-          </div>
-        </section>
-
-        <footer>
-          <span>BABYLON.JS / LOCAL BUNDLE</span>
-          <span>拖动旋转 · 滚轮缩放 · 状态本地保存</span>
-        </footer>
+          <span>本地检查点 / 独立场景</span>
+        </div>
+        <div id="stage-grid" class="stage-grid" aria-live="polite">
+          <p class="loading">正在读取可用场景……</p>
+        </div>
       </section>
+
+      <footer>
+        <p id="lobby-status" role="status">正在验证场景目录和本地导航记录……</p>
+        <button id="reset-navigation" type="button" hidden>重建导航记录</button>
+      </footer>
     </main>
   </body>
 </html>

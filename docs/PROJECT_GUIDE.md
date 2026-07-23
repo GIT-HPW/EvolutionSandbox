@@ -86,9 +86,9 @@ npm --version
 
 轻量版：<https://git-hpw.github.io/EvolutionSandbox/>
 
-Babylon 动漫化高精度版：<https://git-hpw.github.io/EvolutionSandbox/babylon/>
+Babylon 动漫化高精度版演化纪元大厅：<https://git-hpw.github.io/EvolutionSandbox/babylon/>
 
-两个客户端不需要账号、Luanti、模型或 API 密钥，并共用当前站点的 `localStorage` 存档。高精度版适合支持硬件加速的桌面和移动浏览器；轻量版保留为加载更快、兼容性更好的入口。清理站点数据或换浏览器后，不会自动恢复原进度。
+两个客户端不需要账号、Luanti、模型或 API 密钥，轻量版与高精度原点场景共用当前站点的 `localStorage` 权威存档。高精度版先进入阶段选择，再加载独立场景；场景内通过“选项”保存并安全退出。它适合支持硬件加速的桌面和移动浏览器；轻量版保留为加载更快、兼容性更好的入口。清理站点数据或换浏览器后，不会自动恢复原进度。
 
 ### 3.2 在本机浏览器运行
 
@@ -103,7 +103,7 @@ python -m http.server 4173 --directory dist/site
 
 然后打开：<http://127.0.0.1:4173/>
 
-高精度版地址：<http://127.0.0.1:4173/babylon/>
+高精度版阶段选择地址：<http://127.0.0.1:4173/babylon/>
 
 停止本地网页服务时，在 PowerShell 中按 `Ctrl+C`。
 
