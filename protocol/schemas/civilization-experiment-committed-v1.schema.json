@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-experiment-committed-v1.schema.json",
+  "title": "Civilization experiment committed event v1",
+  "type": "object",
+  "required": ["context", "commandId", "proposalId", "patch", "revision", "snapshot", "duplicate"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true }, "required": ["actorId"] }] },
+    "commandId": { "$ref": "context.schema.json#/$defs/id" },
+    "proposalId": { "$ref": "context.schema.json#/$defs/id" },
+    "patch": { "$ref": "civilization-experiment-reviewed-v1.schema.json#/$defs/patch" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "snapshot": { "$ref": "civilization-shared-v1.schema.json#/$defs/snapshot" },
+    "duplicate": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

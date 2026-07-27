@@ -1,0 +1,27 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "director-goal-1",
+  "source": "esip://local/director-control",
+  "target": "esip://evolution/director-alpha",
+  "type": "io.evolution.director.goal.requested.v1",
+  "kind": "command",
+  "time": "2026-07-16T23:30:00.000Z",
+  "subject": "actor/director-player",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/director-goal-requested-v1.schema.json",
+  "sequence": 30,
+  "data": {
+    "context": { "universeId": "universe-1", "timelineId": "origin", "realmId": "first_3d", "actorId": "director-player" },
+    "goal": "让这个宇宙进入星辰时代",
+    "observation": {
+      "sceneId": "origin",
+      "phase": "first_3d",
+      "stateRevision": 7,
+      "availableActions": ["create", "destroy", "stabilize"],
+      "completedMilestones": ["realm_anchored"],
+      "availableScenes": ["origin", "stellar"]
+    },
+    "expectedDirectorRevision": 0
+  }
+}

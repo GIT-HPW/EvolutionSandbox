@@ -9,6 +9,7 @@ export {
 } from "./engine.mjs"
 export {
   CivilizationController,
+  migrateCivilizationControllerRecord,
   replayCivilization,
   validateCivilizationCheckpoint,
   validateCivilizationControllerRecord,

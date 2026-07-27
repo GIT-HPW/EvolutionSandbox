@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/world-experiment-proposal-v1.schema.json",
+  "title": "WorldExperimentProposal v0 schema 1",
+  "type": "object",
+  "required": [
+    "schemaVersion", "proposalId", "universeId", "domain", "sourceTimelineId",
+    "sourceTick", "sourceHistoryHash", "expectedRevision", "requestedBy",
+    "intent", "magnitude", "newTimelineId", "title", "rationale"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "proposalId": { "$ref": "#/$defs/id" },
+    "universeId": { "$ref": "#/$defs/id" },
+    "domain": { "const": "civilization" },
+    "sourceTimelineId": { "$ref": "#/$defs/id" },
+    "sourceTick": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+    "sourceHistoryHash": { "$ref": "#/$defs/hash" },
+    "expectedRevision": { "type": "integer", "minimum": 0 },
+    "requestedBy": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["player", "director", "model"] },
+        "id": { "$ref": "#/$defs/id" }
+      },
+      "additionalProperties": false
+    },
+    "intent": {
+      "enum": ["research_focus", "resource_policy", "settlement_policy", "ecology_policy", "cohesion_policy"]
+    },
+    "magnitude": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "newTimelineId": { "$ref": "#/$defs/id" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "rationale": { "type": "string", "minLength": 1, "maxLength": 512 }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{8}$" }
+  }
+}

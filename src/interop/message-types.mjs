@@ -23,6 +23,12 @@ export const TYPES = Object.freeze({
   CIVILIZATION_UPDATED: "io.evolution.civilization.updated.v1",
   CIVILIZATION_SNAPSHOT_REQUESTED: "io.evolution.civilization.snapshot.requested.v1",
   CIVILIZATION_SNAPSHOT: "io.evolution.civilization.snapshot.v1",
+  CIVILIZATION_EXPERIMENT_REVIEW_REQUESTED: "io.evolution.civilization.experiment.review.requested.v1",
+  CIVILIZATION_EXPERIMENT_REVIEWED: "io.evolution.civilization.experiment.reviewed.v1",
+  CIVILIZATION_EXPERIMENT_COMMIT_REQUESTED: "io.evolution.civilization.experiment.commit.requested.v1",
+  CIVILIZATION_EXPERIMENT_COMMITTED: "io.evolution.civilization.experiment.committed.v1",
+  DIRECTOR_GOAL_REQUESTED: "io.evolution.director.goal.requested.v1",
+  DIRECTOR_DECIDED: "io.evolution.director.decided.v1",
   ERROR: "io.evolution.error.v1",
 })
 
@@ -46,6 +52,20 @@ export const MESSAGE_DEFINITIONS = Object.freeze({
   [TYPES.CIVILIZATION_UPDATED]: { kind: "event", schema: "civilization-updated-v1.schema.json" },
   [TYPES.CIVILIZATION_SNAPSHOT_REQUESTED]: { kind: "query", schema: "civilization-snapshot-requested-v1.schema.json" },
   [TYPES.CIVILIZATION_SNAPSHOT]: { kind: "result", schema: "civilization-snapshot-v1.schema.json" },
+  [TYPES.CIVILIZATION_EXPERIMENT_REVIEW_REQUESTED]: {
+    kind: "query", schema: "civilization-experiment-review-requested-v1.schema.json", requiresExpiry: true,
+  },
+  [TYPES.CIVILIZATION_EXPERIMENT_REVIEWED]: {
+    kind: "result", schema: "civilization-experiment-reviewed-v1.schema.json",
+  },
+  [TYPES.CIVILIZATION_EXPERIMENT_COMMIT_REQUESTED]: {
+    kind: "command", schema: "civilization-experiment-commit-requested-v1.schema.json", requiresExpiry: true,
+  },
+  [TYPES.CIVILIZATION_EXPERIMENT_COMMITTED]: {
+    kind: "event", schema: "civilization-experiment-committed-v1.schema.json",
+  },
+  [TYPES.DIRECTOR_GOAL_REQUESTED]: { kind: "command", schema: "director-goal-requested-v1.schema.json" },
+  [TYPES.DIRECTOR_DECIDED]: { kind: "result", schema: "director-decided-v1.schema.json" },
   [TYPES.ERROR]: { kind: "result", schema: "error-v1.schema.json" },
 })
 

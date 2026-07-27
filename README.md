@@ -23,14 +23,14 @@ EvolutionSandbox 是把 [`Evolution-`](https://github.com/GIT-HPW/Evolution-) �
 npm ci
 ```
 
-之后每次预览包含本地恒星实验场景的最新界面，只需：
+之后每次预览包含本地恒星实验场景和文明观测台的最新界面，只需：
 
 ```powershell
-npm run build:web:stellar:experimental
+npm run build:web:experimental
 python -m http.server 4173 --directory dist/site
 ```
 
-打开 <http://127.0.0.1:4173/babylon/>，在演化纪元大厅选择场景。停止服务时按 `Ctrl+C`。只验证与 GitHub Pages 一致的公开内容时，把构建命令换成 `npm run build:web`；默认公开构建不会包含恒星页面、数据或 bundle。
+打开 <http://127.0.0.1:4173/babylon/>，在演化纪元大厅选择场景。实验构建会提供带本地 AI 导演面板和“全自动演化”自检的原点篇、自动接力运行的星辰篇，以及消费 `WorldObservation v0` 的文明观测台；停止服务时按 `Ctrl+C`。只验证与 GitHub Pages 一致的公开内容时，把构建命令换成 `npm run build:web`；默认公开构建不会包含导演面板、全自动按钮、恒星/文明页面、实验数据或对应 bundle。
 
 需要 Node.js 20 或更高版本，并需要可用的 Python 3 静态文件服务器。不要直接双击 HTML 文件。
 
@@ -128,8 +128,8 @@ npm run verify
 
 ```text
 content/       世界观到规则的内容包与 schema
-protocol/      ESIP 规范、消息 schema、示例和 AsyncAPI
-src/           与引擎无关的确定性规则实现
+protocol/      ESIP 规范、消息 schema、WorldObservation/WorldExperiment schema 和 AsyncAPI
+src/           确定性规则、领域控制器与只读世界观察实现
 web/           可点击浏览器演示
 mods/          Luanti 核心玩法模组与 ESIP bridge
 cli/           规则演示、sidecar 和本地控制端
@@ -143,10 +143,10 @@ docs/          架构、集成和迭代说明
 - “零维”目前是 Luanti 三维空间中的隔离规则领域，并非真正的零维物理模拟。
 - 首版只有原点到首个三维领域，尚未实现 32 维、平行宇宙服务器编排、NPC 或经济系统。
 - 多人共享世界时间线注册表，并可在同一世界创建和加入分支；当前分支只切换玩家上下文，尚不复制地图、资产或玩家数值。
-- 浏览器平台可按注册表 revision 增量追赶时间线事件；Luanti sidecar 默认把队列、租约、source sequence、去重记录、结果和 cursor 写入本地 journal/checkpoint，重启后可以继续未完成命令。
+- 浏览器平台可按注册表 revision 增量追赶时间线事件；Luanti sidecar 默认把队列、租约、source sequence、去重记录、结果和 cursor 写入本地 journal/checkpoint，重启后可以继续未完成命令。文明 sidecar runtime 另以原子 checkpoint 保存完整 controller，并用稳定时间槽 ID 与写前租约保证 pulse 可恢复且不会因确认丢失重复推进。
 - 世界文件、玩家数据、模型权重和 API 密钥都不属于源码仓库。
 
-路线优先级是：持久事件传输 → openVirFactory AI 导演 → 时间线地图/资产语义 → G2Reality 坐标领域 → 多世界/多服务器维度。
+本地导演、`WorldObservation v0`、Babylon 文明观测台、有限因果分支实验、openVirFactory 待确认提案适配、文明 crash-safe 调度和正式实验 ESIP review/commit 已经形成闭环。当前路线优先级是：同源身份网关 → 真实 provider 往返与限流验收 → 稳定互操作基线。公共观察见 [WorldObservation v0](docs/world-observation.md)，实验边界见 [WorldExperimentProposal v0](docs/world-experiment.md)，分期交付项见 [后续开发计划](docs/roadmap.md)。
 
 ## 安全与许可证
 

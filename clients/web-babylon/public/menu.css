@@ -28,6 +28,7 @@ nav a:hover { border-color: var(--cyan); color: var(--cyan); }
 .stage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 18px; }
 .loading { color: #8ba0c5; }
 .stage-card { position: relative; min-height: 340px; padding: 28px; overflow: hidden; border: 1px solid var(--stroke); border-radius: 10px 38px 10px 10px; background: linear-gradient(145deg, rgba(13, 26, 62, .82), rgba(6, 9, 26, .88)); box-shadow: 0 28px 80px rgba(0, 0, 0, .32); }
+.stage-card[data-permitted="true"] { border-color: rgba(255, 211, 106, .72); box-shadow: 0 0 0 2px rgba(255, 211, 106, .1), 0 28px 88px rgba(0, 0, 0, .42); }
 .stage-card::after { content: ""; position: absolute; right: -80px; top: -80px; width: 210px; aspect-ratio: 1; border: 1px solid rgba(83, 236, 255, .28); border-radius: 50%; box-shadow: 0 0 70px rgba(83, 236, 255, .12), inset 0 0 45px rgba(154, 114, 255, .1); }
 .stage-card[data-visibility="experimental"] { border-color: rgba(255, 211, 106, .38); }
 .stage-order { display: block; color: rgba(83, 236, 255, .38); font-size: 4.4rem; font-weight: 900; line-height: .8; letter-spacing: -.08em; }

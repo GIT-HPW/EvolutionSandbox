@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-experiment-review-requested-v1.schema.json",
+  "title": "Civilization experiment review query v1",
+  "type": "object",
+  "required": ["context", "proposal"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true }, "required": ["actorId"] }] },
+    "proposal": { "$ref": "world-experiment-proposal-v1.schema.json" }
+  },
+  "additionalProperties": false
+}

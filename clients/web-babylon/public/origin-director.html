@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
+    <meta name="description" content="EvolutionSandbox 本地 AI 导演实验场。">
+    <title>EvolutionSandbox · 本地导演实验场</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="director.css">
+    <script type="module" src="director-app.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="stage" aria-label="EvolutionSandbox 本地 AI 导演实验场">
+        <canvas id="render-canvas" aria-label="可拖动和缩放的动漫风三维宇宙"></canvas>
+        <div class="star-haze" aria-hidden="true"></div>
+        <div class="scanlines" aria-hidden="true"></div>
+
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">EVOLUTION / LOCAL DIRECTOR LAB</p>
+            <h1>次世代原点演化</h1>
+          </div>
+          <nav aria-label="游戏菜单">
+            <button id="director-open" class="topbar-button director-trigger" type="button" disabled>AI 导演</button>
+            <button id="game-options" class="topbar-button" type="button" disabled>选项</button>
+          </nav>
+        </header>
+
+        <section class="phase-panel" aria-labelledby="phase-badge">
+          <p id="phase-badge">正在同步宇宙状态……</p>
+          <p id="objective">画面只呈现 ESIP 权威端已经确认的状态。</p>
+        </section>
+
+        <section id="mission-panel" class="mission-panel" aria-labelledby="mission-title" hidden>
+          <div class="panel-heading">
+            <span id="mission-title">领域锚定任务</span>
+            <span id="mission-status">0 / 3</span>
+          </div>
+          <ol id="mission-steps"></ol>
+        </section>
+
+        <section class="narrative-panel" aria-labelledby="narrative-title">
+          <div class="panel-heading">
+            <span id="narrative-title">宇宙事件流</span>
+            <i>LIVE</i>
+          </div>
+          <ol id="event-log" aria-live="polite"></ol>
+        </section>
+
+        <section class="control-panel" aria-labelledby="control-title">
+          <div class="panel-heading">
+            <span id="control-title">权威行为控制</span>
+            <span>ESIP 0.1</span>
+          </div>
+          <div id="stats" class="stats" aria-live="polite"></div>
+          <p id="feedback" class="feedback" role="status">正在初始化浏览器权威适配器……</p>
+          <div id="actions" class="actions"></div>
+          <div class="utility-actions">
+            <button id="auto-demo" class="primary" type="button">自动演化演示</button>
+            <button id="full-auto" class="primary" type="button" title="重开本地原点，并运行固定的完整演化自检">全自动演化</button>
+            <button id="reset" type="button">重开宇宙</button>
+          </div>
+        </section>
+
+        <aside id="render-fallback" class="fallback" hidden>
+          <strong>高精度3D初始化失败</strong>
+          <p>规则和存档没有损坏，可以退出到阶段选择后改用轻量 WebGL 客户端。</p>
+        </aside>
+
+        <section id="realm-transition" class="realm-transition" aria-live="assertive" aria-atomic="true" hidden>
+          <div class="transition-rift" aria-hidden="true"></div>
+          <div class="transition-copy">
+            <p>REALM TRANSITION / AUTHORITY CONFIRMED</p>
+            <h2>零维原点 <span>→</span> 首个三维领域</h2>
+            <div class="transition-track" aria-hidden="true"><i></i></div>
+            <small>正在展开空间坐标与物质法则</small>
+          </div>
+        </section>
+
+        <section id="director-overlay" class="director-overlay" hidden>
+          <div class="director-dialog" role="dialog" aria-modal="true" aria-labelledby="director-title">
+            <header>
+              <div>
+                <p class="eyebrow">LOCAL / DETERMINISTIC / MANUAL APPROVAL</p>
+                <h2 id="director-title">AI 导演控制台</h2>
+              </div>
+              <button id="director-close" type="button" aria-label="关闭 AI 导演面板">关闭</button>
+            </header>
+
+            <form id="director-goal-form">
+              <label for="director-goal">用一句话描述希望宇宙如何演化</label>
+              <div class="director-compose">
+                <textarea id="director-goal" name="goal" rows="3" maxlength="512" required placeholder="例如：继续观察这个新生宇宙"></textarea>
+                <button id="director-submit" class="primary" type="submit">生成提案</button>
+              </div>
+              <small>生成提案不会修改游戏。只有你明确批准后，审批闸门才会重新检查权威状态。</small>
+            </form>
+
+            <p id="director-status" class="director-status" role="status">正在初始化本地导演与审批记录……</p>
+
+            <article id="director-ticket" class="director-ticket" hidden>
+              <div class="director-ticket-heading">
+                <div>
+                  <span id="director-ticket-type">待审意图</span>
+                  <h3 id="director-ticket-title">—</h3>
+                </div>
+                <strong id="director-ticket-state">PENDING</strong>
+              </div>
+              <p id="director-ticket-rationale"></p>
+              <dl>
+                <div><dt>票据</dt><dd id="director-ticket-id">—</dd></div>
+                <div><dt>计划</dt><dd id="director-ticket-plan">尚未生成</dd></div>
+                <div><dt>审计</dt><dd id="director-ticket-audit">—</dd></div>
+              </dl>
+              <div class="director-review-actions">
+                <button id="director-approve" class="primary" type="button">批准并交给权威端</button>
+                <button id="director-decline" type="button">拒绝提案</button>
+              </div>
+            </article>
+
+            <footer>
+              <span>实验面板只存在于本地 experimental 构建</span>
+              <button id="director-reset" type="button">重建导演记录</button>
+            </footer>
+          </div>
+        </section>
+
+        <section id="game-options-menu" class="options-overlay" hidden>
+          <div class="options-dialog" role="dialog" aria-modal="true" aria-labelledby="options-title">
+            <p class="eyebrow">SCENE CONTROL / CHECKPOINT REQUIRED</p>
+            <h2 id="options-title">场景选项</h2>
+            <p id="options-status" role="status">场景已暂停。</p>
+            <div class="options-actions">
+              <button id="options-resume" class="primary" type="button">继续当前场景</button>
+              <button id="options-save" type="button">保存检查点</button>
+              <button id="options-exit" type="button">保存并返回阶段选择</button>
+            </div>
+            <small>场景之间不能直接跳转；返回大厅后才能选择另一个已开放纪元。</small>
+          </div>
+        </section>
+
+        <footer>
+          <span>BABYLON.JS / LOCAL DIRECTOR LAB</span>
+          <span>导演提案 ≠ 权威事实 · 人工批准后仍会二次校验</span>
+        </footer>
+      </section>
+    </main>
+  </body>
+</html>

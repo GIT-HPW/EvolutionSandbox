@@ -14,7 +14,7 @@
 
 > 一个由自然语言设定初始条件、由确定性规则持续运行、允许玩家或受限 AI 干预、可以从任意历史节点分叉的文明演化沙盒。
 
-现有项目已经解决了最难返工的一部分底层问题：确定性规则、ESIP 消息边界、revision、幂等、身份映射、时间线注册表、持久事件 sidecar、浏览器/Luanti 双平台和 Babylon 表现客户端。尚缺的主要是文明领域模型、tick 调度、快照/分支语义、自然语言配置转换和文明级视觉表达。
+本报告撰写时，项目已经解决了最难返工的一部分底层问题：确定性规则、ESIP 消息边界、revision、幂等、身份映射、时间线注册表、持久事件 sidecar、浏览器/Luanti 双平台和 Babylon 表现客户端；当时尚缺文明领域模型、tick 调度、快照/分支语义、自然语言配置转换和文明级视觉表达。当前落地状态以 1.1 节链接的实现文档为准。
 
 综合判断：
 
@@ -29,7 +29,7 @@
 
 ### 1.1 当前落地状态
 
-2026-07-22 已完成本报告第一个可合并切片：`CivilizationSpec` v1、三个原创预设、可保存的 seeded PRNG、五指标确定性 tick、周期事件、时代里程碑、CLI 演示和 100/1,000 tick 分批重放测试。当前实现位于 `src/civilization/`，尚未接入 ESIP、Babylon、Luanti 或 openVirFactory；这部分边界是刻意保留的，避免在规则稳定前固化跨项目协议。
+2026-07-22 完成本报告第一个可合并切片时，`CivilizationSpec` v1、三个原创预设、可保存的 seeded PRNG、五指标确定性 tick、周期事件、时代里程碑、CLI 演示和 100/1,000 tick 分批重放测试位于 `src/civilization/`，当时尚未接入 ESIP、Babylon、Luanti 或 openVirFactory。后续实现状态以 [文明内核说明](civilization-engine.md) 和 [后续开发计划](roadmap.md) 为准。
 
 运行和扩展说明见 [确定性文明内核](civilization-engine.md)。
 

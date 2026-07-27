@@ -3,12 +3,24 @@
 import { advanceCivilization, civilizationSpecHash, createCivilization } from "./engine.mjs"
 import { hashHex } from "./prng.mjs"
 import { CivilizationError, validateCivilizationSpec, validateCivilizationState } from "./validation.mjs"
+import {
+  createCivilizationExperimentCausality,
+  mergeCivilizationPolicy,
+  neutralCivilizationPolicy,
+  validateCivilizationExperimentCausality,
+  validateCivilizationRulePatch,
+  validateWorldExperimentProposal,
+} from "../world-experiment/index.mjs"
 
 const CONTROLLER_FIELDS = [
   "schemaVersion", "specId", "specHash", "revision", "snapshotInterval",
   "activeTimelineId", "control", "timelines",
 ]
 const TIMELINE_FIELDS = [
+  "timelineId", "parentTimelineId", "branchTick", "branchHistoryHash",
+  "policy", "causality", "state", "events", "checkpoints",
+]
+const LEGACY_TIMELINE_FIELDS = [
   "timelineId", "parentTimelineId", "branchTick", "branchHistoryHash",
   "state", "events", "checkpoints",
 ]
@@ -117,15 +129,16 @@ export function validateCivilizationCheckpoint(input, checkpoint) {
   return structuredClone(checkpoint)
 }
 
-export function replayCivilization(input, checkpoint, targetTick) {
+export function replayCivilization(input, checkpoint, targetTick, { policy = neutralCivilizationPolicy() } = {}) {
   const spec = validateCivilizationSpec(input)
   const verified = validateCivilizationCheckpoint(spec, checkpoint)
+  const checkedPolicy = validateCivilizationRulePatch(policy, "policy")
   requireInteger(targetTick, "targetTick", { min: verified.tick, max: spec.stopConditions.maxTicks })
   let state = verified.state
   const events = []
   while (state.tick < targetTick && state.status === "running") {
     const count = Math.min(MAX_BATCH_TICKS, targetTick - state.tick)
-    const result = advanceCivilization(spec, state, count)
+    const result = advanceCivilization(spec, state, count, { policy: checkedPolicy })
     state = result.state
     events.push(...result.events)
   }
@@ -163,7 +176,7 @@ function replayFromNearestCheckpoint(spec, timeline, targetTick) {
   }
   const checkpoint = timeline.checkpoints.findLast((candidate) => candidate.tick <= targetTick)
   if (!checkpoint) throw new CivilizationError("checkpoint_missing", `timeline ${timeline.timelineId} has no usable checkpoint`)
-  return replayCivilization(spec, checkpoint, targetTick)
+  return replayCivilization(spec, checkpoint, targetTick, { policy: timeline.policy })
 }
 
 function validateTimeline(spec, input, snapshotInterval, specHash, path) {
@@ -172,6 +185,10 @@ function validateTimeline(spec, input, snapshotInterval, specHash, path) {
   if (input.parentTimelineId !== null) requireId(input.parentTimelineId, `${path}.parentTimelineId`)
   requireInteger(input.branchTick, `${path}.branchTick`, { max: spec.stopConditions.maxTicks })
   requireHash(input.branchHistoryHash, `${path}.branchHistoryHash`)
+  const policy = validateCivilizationRulePatch(input.policy, `${path}.policy`)
+  const causality = input.causality === null
+    ? null
+    : validateCivilizationExperimentCausality(spec, input.causality)
   const state = validateCivilizationState(spec, input.state, specHash)
   if (state.tick < input.branchTick) throw new CivilizationError("invalid_controller", `${path}.state precedes its branch tick`)
   validateEventLog(input.events, state, input.branchTick, `${path}.events`)
@@ -196,28 +213,50 @@ function validateTimeline(spec, input, snapshotInterval, specHash, path) {
       if (checkpoint.tick % snapshotInterval !== 0 && checkpoint.state.status === "running") {
         throw new CivilizationError("checkpoint_conflict", `${path}.checkpoints contains an off-interval running checkpoint`)
       }
-      const replayed = replayCivilization(spec, previous, checkpoint.tick)
+      const replayed = replayCivilization(spec, previous, checkpoint.tick, { policy })
       if (canonicalJson(replayed.state) !== canonicalJson(checkpoint.state)) {
         throw new CivilizationError("replay_mismatch", `${path}.checkpoints[${index}] does not follow deterministic replay`)
       }
     }
     previous = checkpoint
   }
-  const replayed = replayCivilization(spec, previous, state.tick)
+  const replayed = replayCivilization(spec, previous, state.tick, { policy })
   if (canonicalJson(replayed.state) !== canonicalJson(state)) {
     throw new CivilizationError("replay_mismatch", `${path}.state does not follow its latest checkpoint`)
   }
   if (input.branchHistoryHash !== input.checkpoints[0].historyHash) {
     throw new CivilizationError("checkpoint_conflict", `${path}.branchHistoryHash does not match its first checkpoint`)
   }
-  return structuredClone(input)
+  return structuredClone({ ...input, policy, causality })
+}
+
+export function migrateCivilizationControllerRecord(record) {
+  requireObject(record, "controller")
+  if (record.schemaVersion === 2) return structuredClone(record)
+  if (record.schemaVersion !== 1) {
+    throw new CivilizationError("invalid_controller", "controller.schemaVersion must be 1 or 2")
+  }
+  requireExactFields(record, CONTROLLER_FIELDS, "controller")
+  if (!Array.isArray(record.timelines) || record.timelines.length < 1 || record.timelines.length > MAX_TIMELINES) {
+    throw new CivilizationError("invalid_controller", `controller.timelines must contain 1-${MAX_TIMELINES} timelines`)
+  }
+  const timelines = record.timelines.map((timeline, index) => {
+    requireExactFields(timeline, LEGACY_TIMELINE_FIELDS, `controller.timelines[${index}]`)
+    return {
+      ...structuredClone(timeline),
+      policy: neutralCivilizationPolicy(),
+      causality: null,
+    }
+  })
+  return { ...structuredClone(record), schemaVersion: 2, timelines }
 }
 
 export function validateCivilizationControllerRecord(input, record) {
   const spec = validateCivilizationSpec(input)
   const specHash = civilizationSpecHash(spec)
+  record = migrateCivilizationControllerRecord(record)
   requireExactFields(record, CONTROLLER_FIELDS, "controller")
-  if (record.schemaVersion !== 1) throw new CivilizationError("invalid_controller", "controller.schemaVersion must be 1")
+  if (record.schemaVersion !== 2) throw new CivilizationError("invalid_controller", "controller.schemaVersion must be 2")
   if (record.specId !== spec.id || record.specHash !== specHash) {
     throw new CivilizationError("civilization_conflict", "controller does not belong to this civilization specification")
   }
@@ -243,9 +282,14 @@ export function validateCivilizationControllerRecord(input, record) {
   }
   if (!byId.has(record.activeTimelineId)) throw new CivilizationError("invalid_controller", "active timeline does not exist")
 
+  const proposalIds = new Set()
+  let experimentUniverseId
   for (const timeline of timelines) {
     if (timeline.parentTimelineId === null) {
       if (timeline.branchTick !== 0) throw new CivilizationError("invalid_controller", "root timeline must start at tick 0")
+      if (timeline.causality !== null || canonicalJson(timeline.policy) !== canonicalJson(neutralCivilizationPolicy())) {
+        throw new CivilizationError("invalid_controller", "root timeline cannot have experiment causality or policy changes")
+      }
       const genesis = createCivilization(spec)
       if (canonicalJson(timeline.checkpoints[0].state) !== canonicalJson(genesis)) {
         throw new CivilizationError("replay_mismatch", `root timeline ${timeline.timelineId} does not match deterministic genesis`)
@@ -259,6 +303,34 @@ export function validateCivilizationControllerRecord(input, record) {
     const source = replayFromNearestCheckpoint(spec, parent, timeline.branchTick).state
     if (source.historyHash !== timeline.branchHistoryHash || canonicalJson(source) !== canonicalJson(timeline.checkpoints[0].state)) {
       throw new CivilizationError("replay_mismatch", `timeline ${timeline.timelineId} does not match its parent at the branch tick`)
+    }
+    if (timeline.causality === null) {
+      if (canonicalJson(timeline.policy) !== canonicalJson(parent.policy)) {
+        throw new CivilizationError("experiment_policy_mismatch", `timeline ${timeline.timelineId} changed policy without causality`)
+      }
+      continue
+    }
+    const { proposal, patch, committedRevision } = timeline.causality
+    if (proposal.sourceTimelineId !== parent.timelineId
+      || proposal.sourceTick !== timeline.branchTick
+      || proposal.sourceHistoryHash !== timeline.branchHistoryHash
+      || proposal.newTimelineId !== timeline.timelineId) {
+      throw new CivilizationError("experiment_source_mismatch", `timeline ${timeline.timelineId} causality does not match its branch source`)
+    }
+    if (committedRevision > record.revision) {
+      throw new CivilizationError("experiment_revision_mismatch", `timeline ${timeline.timelineId} was committed after the controller revision`)
+    }
+    if (proposalIds.has(proposal.proposalId)) {
+      throw new CivilizationError("experiment_replay", `proposal ${proposal.proposalId} was committed more than once`)
+    }
+    proposalIds.add(proposal.proposalId)
+    if (experimentUniverseId === undefined) experimentUniverseId = proposal.universeId
+    else if (experimentUniverseId !== proposal.universeId) {
+      throw new CivilizationError("experiment_universe_mismatch", "controller experiments belong to different universes")
+    }
+    const expectedPolicy = mergeCivilizationPolicy(spec, parent.policy, patch)
+    if (canonicalJson(timeline.policy) !== canonicalJson(expectedPolicy)) {
+      throw new CivilizationError("experiment_policy_mismatch", `timeline ${timeline.timelineId} policy does not match its proposal`)
     }
   }
 
@@ -299,7 +371,7 @@ export class CivilizationController {
     const state = createCivilization(this._spec)
     const checkpoint = createCheckpoint(this._spec, timelineId, state)
     this._record = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       specId: this._spec.id,
       specHash: civilizationSpecHash(this._spec),
       revision: 0,
@@ -311,6 +383,8 @@ export class CivilizationController {
         parentTimelineId: null,
         branchTick: 0,
         branchHistoryHash: state.historyHash,
+        policy: neutralCivilizationPolicy(),
+        causality: null,
         state,
         events: [],
         checkpoints: [checkpoint],
@@ -348,7 +422,7 @@ export class CivilizationController {
     while (remaining > 0 && timeline.state.status === "running") {
       const nextInterval = (Math.floor(timeline.state.tick / this._record.snapshotInterval) + 1) * this._record.snapshotInterval
       const count = Math.min(remaining, MAX_BATCH_TICKS, nextInterval - timeline.state.tick)
-      const result = advanceCivilization(this._spec, timeline.state, count)
+      const result = advanceCivilization(this._spec, timeline.state, count, { policy: timeline.policy })
       const advanced = result.state.tick - timeline.state.tick
       timeline.state = result.state
       remaining -= advanced
@@ -403,7 +477,12 @@ export class CivilizationController {
     return { revision: this._record.revision, control: structuredClone(this._record.control) }
   }
 
-  branch(newTimelineId, { atTick = this._activeTimeline().state.tick, fromTimelineId = this._record.activeTimelineId, expectedRevision } = {}) {
+  _branch(newTimelineId, {
+    atTick = this._activeTimeline().state.tick,
+    fromTimelineId = this._record.activeTimelineId,
+    expectedRevision,
+    causality = null,
+  } = {}) {
     this._expectRevision(expectedRevision)
     requireId(newTimelineId, "newTimelineId")
     if (this._record.timelines.length >= MAX_TIMELINES) throw new CivilizationError("timeline_limit", "timeline limit reached")
@@ -415,20 +494,77 @@ export class CivilizationController {
     if (!parent) throw new CivilizationError("timeline_not_found", `timeline ${fromTimelineId} does not exist`)
     requireInteger(atTick, "atTick", { min: parent.branchTick, max: parent.state.tick })
     const state = replayFromNearestCheckpoint(this._spec, parent, atTick).state
+    const checkedCausality = causality === null
+      ? null
+      : validateCivilizationExperimentCausality(this._spec, causality)
+    const policy = checkedCausality === null
+      ? structuredClone(parent.policy)
+      : mergeCivilizationPolicy(this._spec, parent.policy, checkedCausality.patch)
     const checkpoint = createCheckpoint(this._spec, newTimelineId, state)
     this._record.timelines.push({
       timelineId: newTimelineId,
       parentTimelineId: parent.timelineId,
       branchTick: atTick,
       branchHistoryHash: state.historyHash,
+      policy,
+      causality: checkedCausality,
       state,
-      events: [],
+      events: checkedCausality === null ? [] : [{
+        cursor: state.eventCursor,
+        tick: state.tick,
+        type: "world_experiment_committed",
+        title: checkedCausality.proposal.title,
+        effects: {
+          proposalId: checkedCausality.proposal.proposalId,
+          intent: checkedCausality.proposal.intent,
+          magnitude: checkedCausality.proposal.magnitude,
+          requestedBy: `${checkedCausality.proposal.requestedBy.type}:${checkedCausality.proposal.requestedBy.id}`,
+        },
+      }],
       checkpoints: [checkpoint],
     })
     this._record.activeTimelineId = newTimelineId
     this._record.control.mode = "paused"
     this._record.revision += 1
     return { revision: this._record.revision, timeline: publicTimeline(this._activeTimeline()), state: structuredClone(state) }
+  }
+
+  branch(newTimelineId, options = {}) {
+    return this._branch(newTimelineId, options)
+  }
+
+  applyExperiment(proposalInput, { expectedRevision } = {}) {
+    const proposal = validateWorldExperimentProposal(proposalInput)
+    this._expectRevision(expectedRevision)
+    if (this._record.control.mode !== "paused") {
+      throw new CivilizationError("experiment_requires_pause", "experiment commit requires paused control mode")
+    }
+    if (expectedRevision !== proposal.expectedRevision) {
+      throw new CivilizationError(
+        "experiment_revision_mismatch",
+        "proposal.expectedRevision must match the current authority revision",
+      )
+    }
+    if (proposal.sourceTimelineId !== this._record.activeTimelineId) {
+      throw new CivilizationError("experiment_source_mismatch", "proposal source must be the active timeline")
+    }
+    const source = this._activeTimeline()
+    if (source.state.status !== "running") {
+      throw new CivilizationError("civilization_stopped", `civilization is ${source.state.status}`)
+    }
+    if (proposal.sourceTick !== source.state.tick || proposal.sourceHistoryHash !== source.state.historyHash) {
+      throw new CivilizationError("experiment_source_mismatch", "proposal source state is stale or does not match authority")
+    }
+    if (this._record.timelines.some((timeline) => timeline.causality?.proposal.proposalId === proposal.proposalId)) {
+      throw new CivilizationError("experiment_replay", `proposal ${proposal.proposalId} was already committed`)
+    }
+    const causality = createCivilizationExperimentCausality(this._spec, proposal, this._record.revision + 1)
+    return this._branch(proposal.newTimelineId, {
+      atTick: proposal.sourceTick,
+      fromTimelineId: proposal.sourceTimelineId,
+      expectedRevision,
+      causality,
+    })
   }
 
   switchTimeline(timelineId, { expectedRevision } = {}) {

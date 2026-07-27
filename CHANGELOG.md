@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- 增加文明实验 ESIP 评审/提交四类消息、严格运行时验证、JSON Schema、AsyncAPI 通道和完整消息样例。
+- 实验 query/command 强制 `expiresat` 与显式 source → actor/universe 绑定；评审保持只读，提交时重新校验 revision 与因果来源。
+- 已提交 proposal 的幂等依据保存在 controller causality 中，适配器或 sidecar runtime 重启后重投不会重复创建分支。
+- 增加文明 sidecar runtime：原子 checkpoint 恢复、host/universe/spec 绑定、写前 pulse 租约和有界 `pulseId` 幂等记录。
+- 增加按时间槽生成稳定 pulse ID 的调度器；租约中断可在过期后确定性重算，提交后确认丢失不会重复推进 tick。
+- `createCivilizationAdapter` 可选择由该 runtime 持久化并在适配器重建后恢复权威；runtime 与旧 `controllerChanged` 回调不能同时拥有持久化权限。
 - 增加 `CivilizationSpec` v1、三个原创文明预设和 schema/运行时双重内容校验。
 - 增加可保存的 seeded PRNG、五指标确定性文明 tick、周期事件、时代里程碑与重放指纹；单次 1,000 tick 和 100+900 分批推进结果一致。
 - 增加 `demo:civilization` CLI、文明内核说明、玩法可行性报告和长时间重放/边界测试，并纳入根 `verify`。
@@ -15,6 +21,17 @@
 - sidecar 默认在 `runtime/sidecar/` 持久化命令、租约、尝试次数、去重、source sequence、结果和单调 cursor。
 - checkpoint 与 journal 使用版本化 schema、连续 revision 和校验值；损坏、记录缺口或世界绑定冲突时失败关闭。
 - 增加认证诊断接口和 `sidecar:client diagnostics`，以及入队、租约、结果三个中断点的重启恢复测试。
+- 本地导演实验页把已批准的 `scene_transition_permit` 接入场景控制器：暂停权威运行、校验同 revision 检查点、写入一次性许可并安全返回阶段大厅。
+- 本地实验页增加“全自动演化”自检：一键完成原点与首次物质循环，通过固定白名单导演流程进入星辰篇，并以 ×16 倍率继续验证恒星生命周期。
+- 场景导航记录升级为 schema 2，显式迁移 schema 1，并为转场许可、自动接力、旧记录恢复和单次消费增加测试。
+- 增加只读 `WorldObservation v0` 公共外壳、严格运行时验证器和独立 JSON Schema，并为原点、恒星、文明提供不改写权威状态的观察适配器。
+- 增加只读世界观察注册表，统一列出、查询和比较三个领域，同时校验 universe、domain 与 provenance source 绑定。
+- 增加默认不进入公开构建的 Babylon 文明观测台，以 `WorldObservation v0` 驱动五指标、确认事件、3D 文明网络和来源显示。
+- 文明观测台支持暂停、倍速、单步、批量推进、时间线创建/切换与只读分支比较；所有修改先进入 `CivilizationController`，界面不直接读写文明 state 字段。
+- 增加严格 `WorldExperimentProposal v0`、五类白名单文明规则偏移和可验证时间线因果记录；提案只读生成，必须再次确认且源 revision、tick 或 history hash 变化时失败关闭。
+- 文明控制器记录升级为 schema 2，旧记录显式迁移为零偏移；实验分支按继承 policy 确定性重放，Babylon 观测台增加提案复核、确认和因果来源展示。
+- 增加 openVirFactory pending 实验响应适配器和请求/响应 JSON Schema；模型提案必须重新匹配当前 universe、时间线、tick、history hash、revision、允许 intent 与 provider/model 审计。
+- `CivilizationObservatory` 可生成不含写权限的 openVirFactory 请求，并只读复核返回提案；复核不会创建分支，仍须调用既有二次确认路径。
 
 ## 0.5.0 - 2026-07-20
 

@@ -3,6 +3,11 @@
 import { CLOUD_EVENTS_VERSION, ESIP_VERSION, KINDS, MESSAGE_DEFINITIONS, schemaUrlFor } from "./message-types.mjs"
 import { EsipError } from "./errors.mjs"
 import { validateCivilizationSpec } from "../civilization/validation.mjs"
+import { validateDirectorIntent, validateDirectorObservation } from "../director/validation.mjs"
+import {
+  validateCivilizationRulePatch,
+  validateWorldExperimentProposal,
+} from "../world-experiment/index.mjs"
 
 const TYPE_PATTERN = /^[a-z][a-z0-9]*(?:\.[a-z0-9_]+){2,}\.v[1-9][0-9]*$/
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/
@@ -217,6 +222,31 @@ function requireCivilizationAction(data) {
   }
 }
 
+function requireExperimentProposal(value, path = "data.proposal") {
+  try {
+    return validateWorldExperimentProposal(value)
+  } catch (error) {
+    throw new EsipError("invalid_message", `${path} is invalid: ${error.message}`)
+  }
+}
+
+function requireExperimentPatch(value, path = "data.patch") {
+  try {
+    return validateCivilizationRulePatch(value, path)
+  } catch (error) {
+    throw new EsipError("invalid_message", `${path} is invalid: ${error.message}`)
+  }
+}
+
+function requireDirectorAudit(value, path = "data.audit") {
+  requireObject(value, path)
+  rejectUnknown(value, ["policyId", "engine", "requestHash", "ruleId"], path)
+  requireId(value.policyId, `${path}.policyId`)
+  if (value.engine !== "deterministic_fake") throw new EsipError("invalid_message", `${path}.engine is invalid`)
+  requireString(value.requestHash, `${path}.requestHash`, { min: 8, max: 8, pattern: /^[0-9a-f]{8}$/ })
+  requireString(value.ruleId, `${path}.ruleId`, { max: 128 })
+}
+
 function validatePayload(message) {
   const data = message.data
   switch (message.type) {
@@ -371,6 +401,80 @@ function validatePayload(message) {
       requireCivilizationSnapshot(data.snapshot)
       if (data.revision !== data.snapshot.revision) throw new EsipError("invalid_message", "data.revision must match data.snapshot.revision")
       break
+    case "io.evolution.civilization.experiment.review.requested.v1": {
+      rejectUnknown(data, ["context", "proposal"], "data")
+      requireContext(data.context, { actor: true })
+      const proposal = requireExperimentProposal(data.proposal)
+      if (proposal.universeId !== data.context.universeId || proposal.sourceTimelineId !== data.context.timelineId) {
+        throw new EsipError("invalid_message", "experiment proposal source must match data.context")
+      }
+      break
+    }
+    case "io.evolution.civilization.experiment.reviewed.v1": {
+      rejectUnknown(data, ["context", "respondingTo", "status", "revision", "proposal", "patch"], "data")
+      requireContext(data.context, { actor: true })
+      requireId(data.respondingTo, "data.respondingTo")
+      if (data.status !== "pending") throw new EsipError("invalid_message", "reviewed experiment status must be pending")
+      requireInteger(data.revision, "data.revision")
+      const proposal = requireExperimentProposal(data.proposal)
+      requireExperimentPatch(data.patch)
+      if (proposal.universeId !== data.context.universeId
+        || proposal.sourceTimelineId !== data.context.timelineId
+        || proposal.expectedRevision !== data.revision) {
+        throw new EsipError("invalid_message", "reviewed experiment does not match its context or revision")
+      }
+      break
+    }
+    case "io.evolution.civilization.experiment.commit.requested.v1": {
+      rejectUnknown(data, ["context", "proposal", "expectedRevision"], "data")
+      requireContext(data.context, { actor: true })
+      requireInteger(data.expectedRevision, "data.expectedRevision")
+      const proposal = requireExperimentProposal(data.proposal)
+      if (proposal.universeId !== data.context.universeId
+        || proposal.sourceTimelineId !== data.context.timelineId
+        || proposal.expectedRevision !== data.expectedRevision) {
+        throw new EsipError("invalid_message", "experiment commit does not match its context or revision")
+      }
+      break
+    }
+    case "io.evolution.civilization.experiment.committed.v1":
+      rejectUnknown(data, ["context", "commandId", "proposalId", "patch", "revision", "snapshot", "duplicate"], "data")
+      requireContext(data.context, { actor: true })
+      requireId(data.commandId, "data.commandId")
+      requireId(data.proposalId, "data.proposalId")
+      requireExperimentPatch(data.patch)
+      requireInteger(data.revision, "data.revision")
+      requireCivilizationSnapshot(data.snapshot)
+      if (data.revision !== data.snapshot.revision) throw new EsipError("invalid_message", "data.revision must match data.snapshot.revision")
+      if (typeof data.duplicate !== "boolean") throw new EsipError("invalid_message", "data.duplicate must be boolean")
+      break
+    case "io.evolution.director.goal.requested.v1":
+      rejectUnknown(data, ["context", "goal", "observation", "expectedDirectorRevision"], "data")
+      requireContext(data.context, { actor: true, realm: true })
+      requireString(data.goal, "data.goal", { max: 512 })
+      requireInteger(data.expectedDirectorRevision, "data.expectedDirectorRevision")
+      try { validateDirectorObservation(data.observation) } catch (error) {
+        throw new EsipError("invalid_message", `data.observation is invalid: ${error.message}`)
+      }
+      if (data.context.realmId !== data.observation.phase) {
+        throw new EsipError("invalid_message", "data.context.realmId must match data.observation.phase")
+      }
+      break
+    case "io.evolution.director.decided.v1":
+      rejectUnknown(data, ["context", "respondingTo", "revision", "outcome", "intent", "reasonCode", "explanation", "audit"], "data")
+      requireContext(data.context, { actor: true, realm: true })
+      requireId(data.respondingTo, "data.respondingTo")
+      requireInteger(data.revision, "data.revision")
+      if (!["proposed", "rejected"].includes(data.outcome)) throw new EsipError("invalid_message", "data.outcome is invalid")
+      requireString(data.reasonCode, "data.reasonCode", { max: 64, pattern: /^[a-z][a-z0-9_]*$/ })
+      requireString(data.explanation, "data.explanation", { max: 512 })
+      requireDirectorAudit(data.audit)
+      if (data.outcome === "proposed") {
+        try { validateDirectorIntent(data.intent) } catch (error) {
+          throw new EsipError("invalid_message", `data.intent is invalid: ${error.message}`)
+        }
+      } else if (data.intent !== null) throw new EsipError("invalid_message", "rejected director decisions must use intent=null")
+      break
     case "io.evolution.error.v1":
       rejectUnknown(data, ["respondingTo", "code", "message", "retryable"], "data")
       requireId(data.respondingTo, "data.respondingTo")
@@ -428,6 +532,9 @@ export function validateMessage(message, options = {}) {
   if (!definition) throw new EsipError("unknown_type", `Unknown ESIP message type: ${message.type}`)
   if (definition.kind !== message.kind) {
     throw new EsipError("kind_mismatch", `${message.type} must use kind=${definition.kind}`)
+  }
+  if (definition.requiresExpiry === true && message.expiresat === undefined) {
+    throw new EsipError("invalid_message", `${message.type} requires expiresat`)
   }
   const expectedSchema = definition.dataschema ?? schemaUrlFor(message.type)
   if (!expectedSchema) throw new EsipError("invalid_registry", `${message.type} has no dataschema registration`)

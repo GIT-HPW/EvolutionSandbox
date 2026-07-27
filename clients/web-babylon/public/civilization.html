@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; media-src 'self'; base-uri 'none'; form-action 'none'">
+    <meta name="description" content="EvolutionSandbox 基于 WorldObservation v0 的文明演化观测台。">
+    <title>EvolutionSandbox · 文明观测台</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="civilization.css">
+    <script type="module" src="civilization-app.js"></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="stage civilization-stage" aria-label="文明演化与时间线观测场景">
+        <canvas id="render-canvas" aria-label="可拖动和缩放的文明网络观测场景"></canvas>
+        <div class="star-haze civilization-haze" aria-hidden="true"></div>
+        <div class="scanlines" aria-hidden="true"></div>
+
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">WORLD OBSERVATION / CIVILIZATION DOMAIN</p>
+            <h1>文明演化观测台</h1>
+          </div>
+          <nav aria-label="游戏菜单">
+            <button id="game-options" class="topbar-button" type="button" disabled>选项</button>
+            <a href="https://github.com/GIT-HPW/EvolutionSandbox">源码</a>
+          </nav>
+        </header>
+
+        <section class="phase-panel" aria-labelledby="phase-badge">
+          <p id="phase-badge">正在验证文明记录……</p>
+          <p id="objective">画面、指标和事件只消费 WorldObservation v0。</p>
+          <small id="observation-provenance">等待权威来源……</small>
+        </section>
+
+        <section id="timeline-panel" class="mission-panel civilization-timeline-panel" aria-labelledby="timeline-title">
+          <div class="panel-heading">
+            <span id="timeline-title">时间线与因果对照</span>
+            <span>READ ONLY</span>
+          </div>
+          <div class="timeline-fields">
+            <label>当前权威时间线
+              <select id="timeline-select" disabled></select>
+            </label>
+            <label>对照时间线
+              <select id="comparison-select" disabled></select>
+            </label>
+          </div>
+          <p id="causal-status" class="causal-status">正在验证时间线因果来源……</p>
+          <form id="experiment-form" class="experiment-form">
+            <div class="experiment-fields">
+              <label>有限实验意图
+                <select id="experiment-intent" disabled></select>
+              </label>
+              <label>规则偏移强度
+                <select id="experiment-magnitude" disabled>
+                  <option value="1">×1 温和</option>
+                  <option value="2" selected>×2 明显</option>
+                  <option value="3">×3 强烈</option>
+                </select>
+              </label>
+            </div>
+            <label for="experiment-timeline">新时间线标识</label>
+            <div>
+              <input id="experiment-timeline" name="timeline" maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9._:-]{0,63}" placeholder="例如 ecology-trial" required>
+              <button type="submit">生成提案</button>
+            </div>
+          </form>
+          <div id="experiment-review" class="experiment-review" hidden>
+            <p id="experiment-summary"></p>
+            <small id="experiment-audit"></small>
+            <div>
+              <button id="experiment-confirm" type="button">确认并建立分支</button>
+              <button id="experiment-discard" type="button">放弃</button>
+            </div>
+          </div>
+          <p id="comparison-status" class="comparison-status">创建第一条分支后，可以比较确认状态。</p>
+          <ul id="comparison-metrics" class="comparison-metrics"></ul>
+        </section>
+
+        <section class="narrative-panel civilization-events" aria-labelledby="narrative-title">
+          <div class="panel-heading">
+            <span id="narrative-title">确认事件流</span>
+            <i>OBSERVED</i>
+          </div>
+          <ol id="event-log" aria-live="polite"></ol>
+        </section>
+
+        <section class="control-panel civilization-control-panel" aria-labelledby="control-title">
+          <div class="panel-heading">
+            <span id="control-title">权威时间控制</span>
+            <span>WORLD OBSERVATION v0</span>
+          </div>
+          <div id="stats" class="stats civilization-stats" aria-live="polite"></div>
+          <p id="feedback" class="feedback" role="status">正在加载 CivilizationSpec……</p>
+          <div class="actions civilization-actions">
+            <button id="civilization-run" type="button"><strong>自主演化</strong><small>按当前倍率持续提交权威推进</small></button>
+            <button id="civilization-step" type="button"><strong>单步推进</strong><small>暂停时精确推进 1 tick</small></button>
+            <button id="civilization-advance" type="button"><strong>推进 25 tick</strong><small>快速观察下一批确认事件</small></button>
+            <button id="civilization-speed" type="button"><strong>时间倍率 ×1</strong><small>循环切换 ×1 / ×4 / ×16 / ×64</small></button>
+          </div>
+          <div class="utility-actions">
+            <button id="civilization-reset" type="button">重置文明</button>
+          </div>
+        </section>
+
+        <aside id="render-fallback" class="fallback" hidden>
+          <strong>文明 3D 观测场景不可用</strong>
+          <p>确定性权威、WorldObservation 指标、时间控制和分支比较仍可继续使用。</p>
+        </aside>
+
+        <section id="game-options-menu" class="options-overlay" hidden>
+          <div class="options-dialog" role="dialog" aria-modal="true" aria-labelledby="options-title">
+            <p class="eyebrow">SCENE CONTROL / CHECKPOINT REQUIRED</p>
+            <h2 id="options-title">场景选项</h2>
+            <p id="options-status" role="status">场景已暂停。</p>
+            <div class="options-actions">
+              <button id="options-resume" class="primary" type="button">继续当前场景</button>
+              <button id="options-save" type="button">保存检查点</button>
+              <button id="options-exit" type="button">保存并返回阶段选择</button>
+            </div>
+            <small>检查点只记录已验证的 observation revision、tick 和 phase。</small>
+          </div>
+        </section>
+
+        <footer>
+          <span>BABYLON.JS / WORLD OBSERVATION v0</span>
+          <span>拖动旋转 · 滚轮缩放 · 权威推进 · 只读对照</span>
+        </footer>
+      </section>
+    </main>
+  </body>
+</html>
