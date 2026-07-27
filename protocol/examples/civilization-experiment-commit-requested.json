@@ -1,0 +1,35 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "civilization-experiment-commit-1",
+  "source": "esip://local/control",
+  "target": "esip://evolution/civilization-alpha",
+  "type": "io.evolution.civilization.experiment.commit.requested.v1",
+  "kind": "command",
+  "time": "2026-07-17T00:00:20.000Z",
+  "expiresat": "2026-07-17T00:01:20.000Z",
+  "subject": "actor/actor-42",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-experiment-commit-requested-v1.schema.json",
+  "sequence": 33,
+  "data": {
+    "context": { "universeId": "universe-1", "timelineId": "main", "actorId": "actor-42" },
+    "proposal": {
+      "schemaVersion": 1,
+      "proposalId": "experiment-d6c4de7a",
+      "universeId": "universe-1",
+      "domain": "civilization",
+      "sourceTimelineId": "main",
+      "sourceTick": 100,
+      "sourceHistoryHash": "1234abcd",
+      "expectedRevision": 7,
+      "requestedBy": { "type": "model", "id": "ollama:qwen2.5-coder:7b" },
+      "intent": "ecology_policy",
+      "magnitude": 2,
+      "newTimelineId": "ecology-model-trial",
+      "title": "生态修复实验",
+      "rationale": "提高生态优先级并降低扩张倾向，比较同一起点的长期差异。"
+    },
+    "expectedRevision": 7
+  }
+}

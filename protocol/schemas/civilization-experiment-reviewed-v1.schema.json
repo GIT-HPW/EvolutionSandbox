@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-experiment-reviewed-v1.schema.json",
+  "title": "Civilization experiment reviewed result v1",
+  "type": "object",
+  "required": ["context", "respondingTo", "status", "revision", "proposal", "patch"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true }, "required": ["actorId"] }] },
+    "respondingTo": { "$ref": "context.schema.json#/$defs/id" },
+    "status": { "const": "pending" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "proposal": { "$ref": "world-experiment-proposal-v1.schema.json" },
+    "patch": { "$ref": "#/$defs/patch" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "patch": {
+      "type": "object",
+      "required": ["knowledge", "ecology", "expansion", "militarism", "collectivism"],
+      "properties": {
+        "knowledge": { "type": "integer", "minimum": -100, "maximum": 100 },
+        "ecology": { "type": "integer", "minimum": -100, "maximum": 100 },
+        "expansion": { "type": "integer", "minimum": -100, "maximum": 100 },
+        "militarism": { "type": "integer", "minimum": -100, "maximum": 100 },
+        "collectivism": { "type": "integer", "minimum": -100, "maximum": 100 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

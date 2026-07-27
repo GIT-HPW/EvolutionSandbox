@@ -1,0 +1,32 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "director-decision-1",
+  "source": "esip://evolution/director-alpha",
+  "target": "esip://local/director-control",
+  "type": "io.evolution.director.decided.v1",
+  "kind": "result",
+  "time": "2026-07-16T23:30:01.000Z",
+  "subject": "actor/director-player",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/director-decided-v1.schema.json",
+  "sequence": 31,
+  "correlationid": "director-goal-1",
+  "causationid": "director-goal-1",
+  "data": {
+    "context": { "universeId": "universe-1", "timelineId": "origin", "realmId": "first_3d", "actorId": "director-player" },
+    "respondingTo": "director-goal-1",
+    "revision": 1,
+    "outcome": "proposed",
+    "intent": {
+      "intentId": "intent-12345678-90abcdef",
+      "type": "scene_transition_request",
+      "title": "申请进入 stellar 场景",
+      "rationale": "目标指向新的宏观演化纪元，且当前权威观察已经满足转场前置条件。",
+      "parameters": { "fromScene": "origin", "toScene": "stellar", "requiredMilestone": "realm_anchored", "mode": "manual_confirm" }
+    },
+    "reasonCode": "intent_proposed",
+    "explanation": "目标已转换为受限导演意图；权威端尚未执行任何游戏行为。",
+    "audit": { "policyId": "local-director-v1", "engine": "deterministic_fake", "requestHash": "12345678", "ruleId": "scene:origin->stellar" }
+  }
+}

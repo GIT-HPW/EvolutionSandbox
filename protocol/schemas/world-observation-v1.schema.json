@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/world-observation-v1.schema.json",
+  "title": "WorldObservation v0 public snapshot schema 1",
+  "type": "object",
+  "required": [
+    "schemaVersion", "universeId", "timelineId", "domain", "tick", "timeScale",
+    "revision", "phase", "rulePackVersion", "summary", "recentEvents",
+    "capabilities", "provenance"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "universeId": { "$ref": "#/$defs/id" },
+    "timelineId": { "$ref": "#/$defs/id" },
+    "domain": { "enum": ["origin", "stellar", "civilization"] },
+    "tick": { "type": "integer", "minimum": 0 },
+    "timeScale": { "type": "integer", "minimum": 0, "maximum": 10000 },
+    "revision": { "type": "integer", "minimum": 0 },
+    "phase": { "$ref": "#/$defs/id" },
+    "rulePackVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "summary": {
+      "type": "object",
+      "required": ["title", "status", "metrics"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "status": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "metrics": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "value", "unit"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "label": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "value": { "type": ["string", "number", "boolean"] },
+              "unit": { "type": "string", "maxLength": 32 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "recentEvents": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "tick", "summary"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "type": { "$ref": "#/$defs/capability" },
+          "tick": { "type": "integer", "minimum": 0 },
+          "summary": { "type": "string", "minLength": 1, "maxLength": 256 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/capability" }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["authority", "source", "adapter", "sourceVersion"],
+      "properties": {
+        "authority": { "$ref": "#/$defs/id" },
+        "source": { "$ref": "#/$defs/id" },
+        "adapter": { "$ref": "#/$defs/id" },
+        "sourceVersion": { "type": "string", "minLength": 1, "maxLength": 64 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "capability": { "type": "string", "pattern": "^[a-z][a-z0-9._:-]{0,63}$" }
+  }
+}

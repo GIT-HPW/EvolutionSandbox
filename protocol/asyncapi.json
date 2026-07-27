@@ -27,6 +27,12 @@
     "civilizationUpdated": { "address": "io.evolution.civilization.updated.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationUpdated" } } },
     "civilizationSnapshotRequested": { "address": "io.evolution.civilization.snapshot.requested.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationSnapshotRequested" } } },
     "civilizationSnapshot": { "address": "io.evolution.civilization.snapshot.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationSnapshot" } } },
+    "civilizationExperimentReviewRequested": { "address": "io.evolution.civilization.experiment.review.requested.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationExperimentReviewRequested" } } },
+    "civilizationExperimentReviewed": { "address": "io.evolution.civilization.experiment.reviewed.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationExperimentReviewed" } } },
+    "civilizationExperimentCommitRequested": { "address": "io.evolution.civilization.experiment.commit.requested.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationExperimentCommitRequested" } } },
+    "civilizationExperimentCommitted": { "address": "io.evolution.civilization.experiment.committed.v1", "messages": { "message": { "$ref": "#/components/messages/civilizationExperimentCommitted" } } },
+    "directorGoalRequested": { "address": "io.evolution.director.goal.requested.v1", "messages": { "message": { "$ref": "#/components/messages/directorGoalRequested" } } },
+    "directorDecided": { "address": "io.evolution.director.decided.v1", "messages": { "message": { "$ref": "#/components/messages/directorDecided" } } },
     "error": { "address": "io.evolution.error.v1", "messages": { "message": { "$ref": "#/components/messages/error" } } }
   },
   "components": {
@@ -50,6 +56,12 @@
       "civilizationUpdated": { "name": "civilizationUpdated", "x-esip-kind": "event", "payload": { "$ref": "./schemas/civilization-updated-v1.schema.json" } },
       "civilizationSnapshotRequested": { "name": "civilizationSnapshotRequested", "x-esip-kind": "query", "payload": { "$ref": "./schemas/civilization-snapshot-requested-v1.schema.json" } },
       "civilizationSnapshot": { "name": "civilizationSnapshot", "x-esip-kind": "result", "payload": { "$ref": "./schemas/civilization-snapshot-v1.schema.json" } },
+      "civilizationExperimentReviewRequested": { "name": "civilizationExperimentReviewRequested", "x-esip-kind": "query", "payload": { "$ref": "./schemas/civilization-experiment-review-requested-v1.schema.json" } },
+      "civilizationExperimentReviewed": { "name": "civilizationExperimentReviewed", "x-esip-kind": "result", "payload": { "$ref": "./schemas/civilization-experiment-reviewed-v1.schema.json" } },
+      "civilizationExperimentCommitRequested": { "name": "civilizationExperimentCommitRequested", "x-esip-kind": "command", "payload": { "$ref": "./schemas/civilization-experiment-commit-requested-v1.schema.json" } },
+      "civilizationExperimentCommitted": { "name": "civilizationExperimentCommitted", "x-esip-kind": "event", "payload": { "$ref": "./schemas/civilization-experiment-committed-v1.schema.json" } },
+      "directorGoalRequested": { "name": "directorGoalRequested", "x-esip-kind": "command", "payload": { "$ref": "./schemas/director-goal-requested-v1.schema.json" } },
+      "directorDecided": { "name": "directorDecided", "x-esip-kind": "result", "payload": { "$ref": "./schemas/director-decided-v1.schema.json" } },
       "error": { "name": "error", "x-esip-kind": "result", "payload": { "$ref": "./schemas/error-v1.schema.json" } }
     }
   }

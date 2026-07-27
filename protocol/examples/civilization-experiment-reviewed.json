@@ -1,0 +1,38 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "civilization-experiment-reviewed-1",
+  "source": "esip://evolution/civilization-alpha",
+  "target": "esip://local/control",
+  "type": "io.evolution.civilization.experiment.reviewed.v1",
+  "kind": "result",
+  "time": "2026-07-17T00:00:11.000Z",
+  "subject": "actor/actor-42",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-experiment-reviewed-v1.schema.json",
+  "sequence": 32,
+  "causationid": "civilization-experiment-review-1",
+  "data": {
+    "context": { "universeId": "universe-1", "timelineId": "main", "actorId": "actor-42" },
+    "respondingTo": "civilization-experiment-review-1",
+    "status": "pending",
+    "revision": 7,
+    "proposal": {
+      "schemaVersion": 1,
+      "proposalId": "experiment-d6c4de7a",
+      "universeId": "universe-1",
+      "domain": "civilization",
+      "sourceTimelineId": "main",
+      "sourceTick": 100,
+      "sourceHistoryHash": "1234abcd",
+      "expectedRevision": 7,
+      "requestedBy": { "type": "model", "id": "ollama:qwen2.5-coder:7b" },
+      "intent": "ecology_policy",
+      "magnitude": 2,
+      "newTimelineId": "ecology-model-trial",
+      "title": "生态修复实验",
+      "rationale": "提高生态优先级并降低扩张倾向，比较同一起点的长期差异。"
+    },
+    "patch": { "knowledge": 0, "ecology": 16, "expansion": -6, "militarism": 0, "collectivism": 0 }
+  }
+}

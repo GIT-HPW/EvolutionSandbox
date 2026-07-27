@@ -1,0 +1,37 @@
+{
+  "specversion": "1.0",
+  "esipversion": "0.1",
+  "id": "civilization-experiment-committed-1",
+  "source": "esip://evolution/civilization-alpha",
+  "target": "esip://local/control",
+  "type": "io.evolution.civilization.experiment.committed.v1",
+  "kind": "event",
+  "time": "2026-07-17T00:00:21.000Z",
+  "subject": "actor/actor-42",
+  "datacontenttype": "application/json",
+  "dataschema": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/civilization-experiment-committed-v1.schema.json",
+  "sequence": 34,
+  "causationid": "civilization-experiment-commit-1",
+  "data": {
+    "context": { "universeId": "universe-1", "timelineId": "ecology-model-trial", "realmId": "origin", "actorId": "actor-42" },
+    "commandId": "civilization-experiment-commit-1",
+    "proposalId": "experiment-d6c4de7a",
+    "patch": { "knowledge": 0, "ecology": 16, "expansion": -6, "militarism": 0, "collectivism": 0 },
+    "revision": 8,
+    "snapshot": {
+      "schemaVersion": 1,
+      "specId": "tidal_archive",
+      "specHash": "00000000",
+      "revision": 8,
+      "control": { "mode": "paused", "speed": 1 },
+      "activeTimelineId": "ecology-model-trial",
+      "state": { "schemaVersion": 1, "specId": "tidal_archive", "specHash": "00000000", "name": "潮汐档案文明", "tick": 100, "era": "origin", "status": "running", "population": 120, "resources": 220, "knowledge": 12, "ecology": 88, "cohesion": 74, "rngState": 1, "eventCursor": 0, "historyHash": "1234abcd", "milestones": [{ "id": "founding", "tick": 0 }] },
+      "timelines": [
+        { "timelineId": "main", "parentTimelineId": null, "branchTick": 0, "tick": 100, "status": "running", "historyHash": "1234abcd", "checkpointCount": 2, "latestCheckpointHash": "44444444" },
+        { "timelineId": "ecology-model-trial", "parentTimelineId": "main", "branchTick": 100, "tick": 100, "status": "running", "historyHash": "1234abcd", "checkpointCount": 1, "latestCheckpointHash": "55555555" }
+      ],
+      "recentEvents": []
+    },
+    "duplicate": false
+  }
+}

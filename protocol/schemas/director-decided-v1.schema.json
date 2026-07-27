@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/director-decided-v1.schema.json",
+  "title": "Director decision result v1",
+  "type": "object",
+  "required": ["context", "respondingTo", "revision", "outcome", "intent", "reasonCode", "explanation", "audit"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true, "realmId": true }, "required": ["actorId", "realmId"] }] },
+    "respondingTo": { "$ref": "context.schema.json#/$defs/id" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "outcome": { "enum": ["proposed", "rejected"] },
+    "intent": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/intent" }] },
+    "reasonCode": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]*$" },
+    "explanation": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "audit": {
+      "type": "object",
+      "required": ["policyId", "engine", "requestHash", "ruleId"],
+      "properties": {
+        "policyId": { "$ref": "context.schema.json#/$defs/id" },
+        "engine": { "const": "deterministic_fake" },
+        "requestHash": { "type": "string", "pattern": "^[0-9a-f]{8}$" },
+        "ruleId": { "type": "string", "minLength": 1, "maxLength": 128 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    { "if": { "properties": { "outcome": { "const": "proposed" } }, "required": ["outcome"] }, "then": { "properties": { "intent": { "$ref": "#/$defs/intent" } } } },
+    { "if": { "properties": { "outcome": { "const": "rejected" } }, "required": ["outcome"] }, "then": { "properties": { "intent": { "type": "null" } } } }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "intent": {
+      "type": "object",
+      "required": ["intentId", "type", "title", "rationale", "parameters"],
+      "properties": {
+        "intentId": { "$ref": "context.schema.json#/$defs/id" },
+        "type": { "enum": ["narrative_cue", "action_suggestion", "scene_transition_request"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "rationale": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "parameters": { "type": "object" }
+      },
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "narrative_cue" } }, "required": ["type"] }, "then": { "properties": { "parameters": { "$ref": "#/$defs/narrativeParameters" } } } },
+        { "if": { "properties": { "type": { "const": "action_suggestion" } }, "required": ["type"] }, "then": { "properties": { "parameters": { "$ref": "#/$defs/actionParameters" } } } },
+        { "if": { "properties": { "type": { "const": "scene_transition_request" } }, "required": ["type"] }, "then": { "properties": { "parameters": { "$ref": "#/$defs/transitionParameters" } } } }
+      ],
+      "additionalProperties": false
+    },
+    "narrativeParameters": {
+      "type": "object",
+      "required": ["cue", "tone"],
+      "properties": {
+        "cue": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "tone": { "enum": ["neutral", "discovery", "warning", "milestone"] }
+      },
+      "additionalProperties": false
+    },
+    "actionParameters": {
+      "type": "object",
+      "required": ["actionId"],
+      "properties": { "actionId": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{0,63}$" } },
+      "additionalProperties": false
+    },
+    "transitionParameters": {
+      "type": "object",
+      "required": ["fromScene", "toScene", "requiredMilestone", "mode"],
+      "properties": {
+        "fromScene": { "$ref": "context.schema.json#/$defs/id" },
+        "toScene": { "$ref": "context.schema.json#/$defs/id" },
+        "requiredMilestone": { "$ref": "context.schema.json#/$defs/id" },
+        "mode": { "const": "manual_confirm" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

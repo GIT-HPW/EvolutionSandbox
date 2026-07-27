@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://git-hpw.github.io/EvolutionSandbox/esip/schemas/director-goal-requested-v1.schema.json",
+  "title": "Director goal request v1",
+  "type": "object",
+  "required": ["context", "goal", "observation", "expectedDirectorRevision"],
+  "properties": {
+    "context": { "allOf": [{ "$ref": "context.schema.json" }, { "type": "object", "properties": { "actorId": true, "realmId": true }, "required": ["actorId", "realmId"] }] },
+    "goal": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "expectedDirectorRevision": { "type": "integer", "minimum": 0 },
+    "observation": {
+      "type": "object",
+      "required": ["sceneId", "phase", "stateRevision", "availableActions", "completedMilestones", "availableScenes"],
+      "properties": {
+        "sceneId": { "$ref": "context.schema.json#/$defs/id" },
+        "phase": { "$ref": "context.schema.json#/$defs/id" },
+        "stateRevision": { "type": "integer", "minimum": 0 },
+        "availableActions": { "type": "array", "maxItems": 64, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z][a-z0-9_]{0,63}$" } },
+        "completedMilestones": { "type": "array", "maxItems": 64, "uniqueItems": true, "items": { "$ref": "context.schema.json#/$defs/id" } },
+        "availableScenes": { "type": "array", "maxItems": 32, "uniqueItems": true, "items": { "$ref": "context.schema.json#/$defs/id" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

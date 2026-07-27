@@ -2,6 +2,7 @@
 
 import { hashHex, randomInt, seedToState } from "./prng.mjs"
 import { CivilizationError, validateCivilizationSpec, validateCivilizationState } from "./validation.mjs"
+import { effectiveCivilizationValues, neutralCivilizationPolicy } from "../world-experiment/civilization-policy.mjs"
 
 const MAX_BATCH_TICKS = 10000
 const METRIC_LIMIT = 1000000000
@@ -46,16 +47,16 @@ function applyEffects(state, effects) {
   state.cohesion = clamp(state.cohesion + (effects.cohesion ?? 0), 0, 100)
 }
 
-function periodicEvent(spec, state, roll, events) {
+function periodicEvent(values, state, roll, events) {
   if (state.tick % 25 !== 0) return
   let event
   if (state.resources < Math.ceil(state.population / 8)) {
     event = { type: "scarcity_response", title: "资源配给会议", effects: { resources: 12, cohesion: -2 } }
-  } else if (spec.values.ecology >= 70 && roll < 25) {
+  } else if (values.ecology >= 70 && roll < 25) {
     event = { type: "ecological_bloom", title: "生态群落复苏", effects: { ecology: 3, cohesion: 1 } }
-  } else if (spec.values.knowledge >= 65 && roll < 55) {
+  } else if (values.knowledge >= 65 && roll < 55) {
     event = { type: "archive_breakthrough", title: "知识档案突破", effects: { knowledge: 18 + Math.floor(state.population / 80) } }
-  } else if (spec.values.expansion >= 60 && roll < 80) {
+  } else if (values.expansion >= 60 && roll < 80) {
     event = { type: "resource_frontier", title: "发现新资源前沿", effects: { resources: 24, ecology: -2 } }
   } else {
     event = { type: "civic_gathering", title: "公共协商周期", effects: { resources: -3, cohesion: 2 } }
@@ -79,46 +80,46 @@ function advanceEra(state, events) {
   addEvent(state, events, "era_transition", transition.title, { era: transition.era })
 }
 
-function advanceOne(spec, state) {
+function advanceOne(spec, values, state) {
   const next = structuredClone(state)
   const events = []
   next.tick += 1
 
   const productionRoll = randomInt(next.rngState, 3)
   next.rngState = productionRoll.state
-  const production = Math.max(1, Math.floor(next.population * (30 + spec.values.expansion) / 1500)) + productionRoll.value
-  const consumption = Math.ceil(next.population / 42) + Math.floor(spec.values.militarism / 45)
-  const researchInvestment = Math.floor(spec.values.knowledge / 30)
+  const production = Math.max(1, Math.floor(next.population * (30 + values.expansion) / 1500)) + productionRoll.value
+  const consumption = Math.ceil(next.population / 42) + Math.floor(values.militarism / 45)
+  const researchInvestment = Math.floor(values.knowledge / 30)
   const resourceBalance = production - consumption - researchInvestment
   next.resources = clamp(next.resources + resourceBalance, 0, METRIC_LIMIT)
 
   const capacity = Math.max(50, next.resources * 2 + next.ecology * 4)
-  const growthWeight = 2 + Math.floor(next.cohesion / 30) + Math.floor(spec.values.collectivism / 40)
+  const growthWeight = 2 + Math.floor(next.cohesion / 30) + Math.floor(values.collectivism / 40)
   let populationDelta
   if (next.resources === 0) populationDelta = -Math.max(1, Math.ceil(next.population / 120))
   else if (next.population < capacity) populationDelta = Math.max(1, Math.floor(next.population * growthWeight / 1500))
   else populationDelta = -Math.max(1, Math.ceil((next.population - capacity) / 30))
   next.population = clamp(next.population + populationDelta, 0, METRIC_LIMIT)
 
-  const knowledgeGain = Math.max(1, Math.floor(next.population * (20 + spec.values.knowledge) / 6000)) + researchInvestment
+  const knowledgeGain = Math.max(1, Math.floor(next.population * (20 + values.knowledge) / 6000)) + researchInvestment
   next.knowledge = clamp(next.knowledge + knowledgeGain, 0, METRIC_LIMIT)
 
   if (next.tick % 10 === 0) {
-    const ecologyDelta = (spec.values.ecology >= 55 ? 1 : 0)
-      - (spec.values.expansion >= 85 ? 1 : 0)
+    const ecologyDelta = (values.ecology >= 55 ? 1 : 0)
+      - (values.expansion >= 85 ? 1 : 0)
       - (next.population > capacity ? 1 : 0)
     next.ecology = clamp(next.ecology + ecologyDelta, 0, 100)
   }
   if (next.tick % 5 === 0) {
     const cohesionDelta = next.resources < consumption * 2
       ? -1
-      : (spec.values.collectivism >= 60 ? 1 : 0) - (spec.values.militarism >= 80 ? 1 : 0)
+      : (values.collectivism >= 60 ? 1 : 0) - (values.militarism >= 80 ? 1 : 0)
     next.cohesion = clamp(next.cohesion + cohesionDelta, 0, 100)
   }
 
   const eventRoll = randomInt(next.rngState, 100)
   next.rngState = eventRoll.state
-  periodicEvent(spec, next, eventRoll.value, events)
+  periodicEvent(values, next, eventRoll.value, events)
   advanceEra(next, events)
 
   const collapsed = next.population === 0 || next.ecology === 0 || next.cohesion === 0
@@ -163,16 +164,17 @@ export function createCivilization(input) {
   return validateCivilizationState(spec, state, specHash)
 }
 
-export function advanceCivilization(input, currentState, ticks = 1) {
+export function advanceCivilization(input, currentState, ticks = 1, { policy = neutralCivilizationPolicy() } = {}) {
   const spec = validateCivilizationSpec(input)
   const specHash = civilizationSpecHash(spec)
+  const values = effectiveCivilizationValues(spec, policy)
   let state = validateCivilizationState(spec, currentState, specHash)
   if (!Number.isSafeInteger(ticks) || ticks < 1 || ticks > MAX_BATCH_TICKS) {
     throw new CivilizationError("invalid_advance", `ticks must be an integer from 1 to ${MAX_BATCH_TICKS}`)
   }
   const events = []
   for (let index = 0; index < ticks && state.status === "running"; index += 1) {
-    const result = advanceOne(spec, state)
+    const result = advanceOne(spec, values, state)
     state = result.state
     events.push(...result.events)
   }
