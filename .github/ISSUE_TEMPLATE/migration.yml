@@ -1,0 +1,32 @@
+name: Schema or storage migration
+description: 规划状态、schema、checkpoint 或协议的兼容迁移
+title: "migration: "
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: 来源版本与目标版本
+      placeholder: controller schema 1 -> 2
+    validations:
+      required: true
+  - type: textarea
+    id: invariants
+    attributes:
+      label: 必须保持的不变量
+      description: 身份、revision、hash、因果、玩家数据及失败关闭要求。
+    validations:
+      required: true
+  - type: textarea
+    id: procedure
+    attributes:
+      label: 迁移与回滚步骤
+      description: 包括备份、幂等、部分失败和旧版本读取策略。
+    validations:
+      required: true
+  - type: textarea
+    id: fixtures
+    attributes:
+      label: 测试夹具与验收
+      description: 旧记录、损坏记录、重复执行和跨平台测试。
+    validations:
+      required: true

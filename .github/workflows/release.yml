@@ -17,6 +17,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - run: node scripts/check-release-version.mjs "${GITHUB_REF_NAME}"
       - run: npm ci
       - run: npm run verify
       - name: Build clean source ZIP

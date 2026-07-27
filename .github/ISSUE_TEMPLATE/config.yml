@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 私密安全报告
+    url: https://github.com/GIT-HPW/EvolutionSandbox/security/advisories/new
+    about: 密钥泄露、认证绕过和其他未公开漏洞请使用私密安全公告。
