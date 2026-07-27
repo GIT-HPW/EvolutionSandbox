@@ -1,0 +1,39 @@
+name: Maintainer cross-repository integration
+description: 由维护者跟踪 EvolutionSandbox、openVirFactory 或游戏平台之间的契约集成
+title: "integration: "
+body:
+  - type: checkboxes
+    id: invited
+    attributes:
+      label: 上游范围
+      options:
+        - label: 此集成由维护者创建或明确邀请；外部实验应保留在 Fork
+          required: true
+  - type: textarea
+    id: participants
+    attributes:
+      label: 参与仓库与平台
+      description: 列出生产者、消费者、权威端及其关联 Issue/PR。
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: 契约与版本
+      description: 消息/schema 版本、兼容范围、source/target 和失败语义。
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: 身份、安全与可靠性
+      description: 身份绑定、授权、过期、限流、幂等、重启和敏感数据边界。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 跨仓库验收
+      description: 每个仓库的自动测试、联合 smoke test 和回滚条件。
+    validations:
+      required: true
