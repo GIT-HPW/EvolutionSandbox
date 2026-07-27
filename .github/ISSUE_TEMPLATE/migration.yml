@@ -1,7 +1,14 @@
-name: Schema or storage migration
-description: 规划状态、schema、checkpoint 或协议的兼容迁移
+name: Maintainer schema or storage migration
+description: 由维护者规划状态、schema、checkpoint 或协议迁移
 title: "migration: "
 body:
+  - type: checkboxes
+    id: invited
+    attributes:
+      label: 上游范围
+      options:
+        - label: 此迁移由维护者创建或明确邀请
+          required: true
   - type: input
     id: versions
     attributes:

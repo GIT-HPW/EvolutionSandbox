@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Fork 开发指南
+    url: https://github.com/GIT-HPW/EvolutionSandbox/blob/main/FORKS.md
+    about: 新玩法、世界观分支和激进实验请在独立 Fork 中实现，不提交上游修改请求。
   - name: 私密安全报告
     url: https://github.com/GIT-HPW/EvolutionSandbox/security/advisories/new
     about: 密钥泄露、认证绕过和其他未公开漏洞请使用私密安全公告。

@@ -1,7 +1,14 @@
-name: Release readiness
-description: 跟踪一个版本从冻结范围到发布和恢复演练
+name: Maintainer release readiness
+description: 由维护者跟踪版本冻结、发布和恢复演练
 title: "release: v"
 body:
+  - type: checkboxes
+    id: maintainer
+    attributes:
+      label: 上游范围
+      options:
+        - label: 此 Release 由官方维护者规划
+          required: true
   - type: input
     id: version
     attributes:

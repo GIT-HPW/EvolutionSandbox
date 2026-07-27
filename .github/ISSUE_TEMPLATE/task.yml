@@ -1,5 +1,5 @@
-name: Engineering task
-description: 一个可在单次纵切中完成并验收的工程任务
+name: Maintainer engineering task
+description: 由维护者或受邀参与者跟踪的单次纵切任务
 title: "task: "
 body:
   - type: textarea
@@ -40,6 +40,8 @@ body:
     attributes:
       label: Ready 条件
       options:
+        - label: 此任务由维护者创建或明确邀请
+          required: true
         - label: 已属于一个明确里程碑
           required: true
         - label: 已说明测试、文档和迁移影响

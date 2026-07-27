@@ -1,7 +1,14 @@
-name: Cross-repository integration
-description: 跟踪 EvolutionSandbox、openVirFactory 或游戏平台之间的契约集成
+name: Maintainer cross-repository integration
+description: 由维护者跟踪 EvolutionSandbox、openVirFactory 或游戏平台之间的契约集成
 title: "integration: "
 body:
+  - type: checkboxes
+    id: invited
+    attributes:
+      label: 上游范围
+      options:
+        - label: 此集成由维护者创建或明确邀请；外部实验应保留在 Fork
+          required: true
   - type: textarea
     id: participants
     attributes:
