@@ -1,0 +1,45 @@
+name: Maintainer release readiness
+description: 由维护者跟踪版本冻结、发布和恢复演练
+title: "release: v"
+body:
+  - type: checkboxes
+    id: maintainer
+    attributes:
+      label: 上游范围
+      options:
+        - label: 此 Release 由官方维护者规划
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      placeholder: v0.6.0
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 冻结范围
+      description: 包含的里程碑、PR 和明确推迟的内容。
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: 兼容与迁移
+      description: 存档、协议、浏览器、Luanti 与 openVirFactory 的兼容组合。
+    validations:
+      required: true
+  - type: checkboxes
+    id: gates
+    attributes:
+      label: 发布门禁
+      options:
+        - label: 所有范围内 PR 已合并且 required checks 通过
+          required: true
+        - label: package 版本、tag、CHANGELOG 与兼容矩阵一致
+          required: true
+        - label: 存档迁移、备份和回滚已演练
+          required: true
+        - label: 公开构建与源归档不包含实验数据或密钥
+          required: true

@@ -1,6 +1,6 @@
-name: ESIP proposal
-description: 提议跨游戏消息、适配器或传输改进
-title: "esip: "
+name: ESIP compatibility report
+description: 报告已发布 ESIP 契约的兼容、实现或可靠性问题
+title: "interop: "
 labels: [protocol]
 body:
   - type: textarea
@@ -24,3 +24,10 @@ body:
       description: 如何处理重复、乱序、断线、幂等、认证和隐私？
     validations:
       required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: 上游范围
+      options:
+        - label: 这是现有契约的可复现兼容问题，不是未经邀请的新协议或权威语义提案
+          required: true

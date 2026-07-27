@@ -1,0 +1,34 @@
+name: Fork showcase
+description: 分享独立 Fork 的实验结果，不请求合并进官方世界线
+title: "fork: "
+body:
+  - type: input
+    id: repository
+    attributes:
+      label: Fork 地址
+      placeholder: https://github.com/example/EvolutionSandbox
+    validations:
+      required: true
+  - type: textarea
+    id: divergence
+    attributes:
+      label: 分支方向
+      description: 说明修改了哪些世界观、规则、协议或表现，以及与官方版本的差异。
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: 兼容与标识
+      description: 使用的上游版本、ESIP/schema 范围，以及如何标注为非官方版本。
+    validations:
+      required: true
+  - type: checkboxes
+    id: acknowledgement
+    attributes:
+      label: Fork 边界
+      options:
+        - label: 此 Issue 仅用于展示和兼容交流，不请求把 Fork 内容合并进官方世界线
+          required: true
+        - label: Fork 已明确标注非官方，并保留适用的许可证与来源说明
+          required: true

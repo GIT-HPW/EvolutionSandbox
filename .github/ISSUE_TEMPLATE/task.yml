@@ -1,0 +1,48 @@
+name: Maintainer engineering task
+description: 由维护者或受邀参与者跟踪的单次纵切任务
+title: "task: "
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: 目标
+      description: 完成后用户或系统能够观察到什么结果？
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: 非目标
+      description: 本任务明确不解决什么，防止实现过程中扩大范围。
+    validations:
+      required: true
+  - type: textarea
+    id: authority
+    attributes:
+      label: 权威与数据边界
+      description: 谁写最终状态？会读取或修改哪些 schema、存档、身份或协议？
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 依赖
+      description: 前置 Issue、跨仓库 PR、协议版本或外部环境。
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收条件
+      description: 列出成功、失败、恢复和安全路径的可自动验证结果。
+    validations:
+      required: true
+  - type: checkboxes
+    id: ready
+    attributes:
+      label: Ready 条件
+      options:
+        - label: 此任务由维护者创建或明确邀请
+          required: true
+        - label: 已属于一个明确里程碑
+          required: true
+        - label: 已说明测试、文档和迁移影响
+          required: true
