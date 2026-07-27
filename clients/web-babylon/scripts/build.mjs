@@ -9,8 +9,13 @@ import { publicSceneDescriptor, scenesForProfile } from "../config/scenes.mjs"
 const clientRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const repositoryRoot = resolve(clientRoot, "..", "..")
 const output = resolve(repositoryRoot, "dist", "site", "babylon")
-const experimentalStellar = process.argv.includes("--experimental-stellar")
-const profile = experimentalStellar ? "experimental" : "public"
+const experimental = process.argv.includes("--experimental-stellar")
+  || process.argv.includes("--experimental-civilization")
+  || process.argv.includes("--experimental")
+const experimentalStellar = experimental
+const experimentalDirector = experimental
+const experimentalCivilization = experimental
+const profile = experimental ? "experimental" : "public"
 const scenes = scenesForProfile(profile)
 
 await rm(output, { recursive: true, force: true })
@@ -72,5 +77,7 @@ await writeFile(resolve(output, "build.json"), JSON.stringify({
   entries,
   scenes: scenes.map((scene) => scene.id),
   experimentalStellar,
+  experimentalDirector,
+  experimentalCivilization,
 }, null, 2) + "\n", "utf8")
 console.log(`Babylon ${profile} scene lobby built at dist/site/babylon (${Math.ceil(bytes / 1024)} KiB total)`)

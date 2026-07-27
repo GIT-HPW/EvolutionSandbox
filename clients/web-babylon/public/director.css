@@ -1,0 +1,112 @@
+.director-trigger {
+  border-color: rgba(255, 211, 106, .52);
+  color: var(--gold);
+}
+
+.director-overlay {
+  position: absolute;
+  z-index: 46;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 3vw, 36px);
+  overflow: auto;
+  background: rgba(2, 3, 13, .82);
+  backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.director-overlay[hidden] { display: none; }
+
+.director-dialog {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 40px);
+  padding: clamp(22px, 4vw, 38px);
+  overflow: auto;
+  border: 1px solid rgba(255, 211, 106, .36);
+  border-radius: 10px 38px 10px 10px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(154, 114, 255, .2), transparent 38%),
+    linear-gradient(145deg, rgba(13, 25, 59, .98), rgba(6, 8, 25, .99));
+  box-shadow: 0 36px 120px rgba(0, 0, 0, .72), 0 0 48px rgba(154, 114, 255, .1);
+}
+
+.director-dialog > header,
+.director-ticket-heading,
+.director-dialog > footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.director-dialog h2 { margin: 8px 0 0; font-size: clamp(1.8rem, 4vw, 3rem); letter-spacing: -.04em; }
+.director-dialog button { min-height: 38px; padding: 8px 13px; }
+.director-dialog .primary { border-color: rgba(83, 236, 255, .52); color: var(--cyan); }
+
+#director-goal-form {
+  margin-top: 26px;
+  padding: 18px;
+  border: 1px solid rgba(116, 166, 255, .2);
+  border-radius: 8px 22px 8px 8px;
+  background: rgba(5, 11, 31, .62);
+}
+
+#director-goal-form label { display: block; margin-bottom: 10px; color: #dbe8ff; font-size: .78rem; font-weight: 700; }
+#director-goal-form > small { display: block; margin-top: 10px; color: #7389ad; font-size: .64rem; line-height: 1.55; }
+.director-compose { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.director-compose textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  resize: vertical;
+  color: #edf6ff;
+  border: 1px solid rgba(118, 169, 255, .3);
+  border-radius: 7px;
+  outline: none;
+  background: rgba(3, 7, 23, .9);
+  font: inherit;
+  line-height: 1.55;
+}
+.director-compose textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(83, 236, 255, .08); }
+
+.director-status {
+  min-height: 44px;
+  margin: 14px 0;
+  padding: 11px 13px;
+  border-left: 2px solid var(--violet);
+  background: rgba(17, 27, 61, .55);
+  color: #afc1df;
+  font-size: .72rem;
+  line-height: 1.55;
+}
+.director-status[data-tone="success"] { border-color: #72ffbd; color: #c8ffe4; }
+.director-status[data-tone="warning"] { border-color: var(--rose); color: #ffc2d8; }
+.director-status[data-tone="pending"] { border-color: var(--gold); color: #ffe7a7; }
+
+.director-ticket {
+  padding: 18px;
+  border: 1px solid rgba(154, 114, 255, .34);
+  border-radius: 22px 8px 8px;
+  background: linear-gradient(145deg, rgba(20, 22, 59, .82), rgba(7, 12, 34, .82));
+}
+.director-ticket h3 { margin: 5px 0 0; color: #f3f7ff; font-size: 1.15rem; }
+#director-ticket-type { color: #8599bd; font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; }
+#director-ticket-state { padding: 5px 8px; color: var(--gold); border: 1px solid rgba(255, 211, 106, .3); border-radius: 999px; font-size: .58rem; letter-spacing: .12em; }
+#director-ticket-rationale { color: #aebfdd; font-size: .72rem; line-height: 1.6; }
+.director-ticket dl { display: grid; gap: 6px; margin: 14px 0; }
+.director-ticket dl div { display: grid; grid-template-columns: 70px 1fr; gap: 10px; padding: 8px 9px; background: rgba(5, 10, 29, .58); }
+.director-ticket dt { color: #7186aa; font-size: .62rem; }
+.director-ticket dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: #c3d1e8; font: 600 .62rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.director-review-actions { display: grid; grid-template-columns: 1.25fr .75fr; gap: 8px; }
+
+.director-dialog > footer { align-items: center; margin-top: 18px; color: #667b9f; font-size: .6rem; }
+.director-dialog > footer button { min-height: 30px; padding: 5px 9px; color: #8ca0c2; font-size: .62rem; }
+#full-auto { grid-column: 1 / -1; border-color: rgba(255, 211, 106, .62); color: var(--gold); }
+
+@media (max-width: 640px) {
+  .director-overlay { align-items: start; padding: 8px; }
+  .director-dialog { max-height: none; padding: 20px 16px; border-radius: 8px 22px 8px 8px; }
+  .director-compose { grid-template-columns: 1fr; }
+  .director-review-actions { grid-template-columns: 1fr; }
+  .director-dialog > footer { align-items: flex-start; flex-direction: column; }
+}

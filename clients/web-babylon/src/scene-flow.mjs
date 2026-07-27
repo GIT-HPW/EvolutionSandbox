@@ -2,7 +2,7 @@
 
 export const SCENE_FLOW_STORAGE_KEY = "evolution-sandbox.scene-flow.v1"
 
-const SCHEMA_VERSION = 1
+const SCHEMA_VERSION = 2
 const STATES = new Set([
   "boot",
   "stage_select",
@@ -24,6 +24,7 @@ const TRANSITIONS = {
   error: new Set(["stage_select"]),
 }
 const ID_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/
+const PERMIT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/
 
 export class SceneFlowError extends Error {
   constructor(code, message) {
@@ -53,6 +54,7 @@ function initialSnapshot(now) {
     lastSceneId: null,
     revision: 0,
     checkpoint: null,
+    transitionPermit: null,
     updatedAt: now(),
   }
 }
@@ -77,7 +79,34 @@ function validateCheckpoint(checkpoint) {
   return structuredClone(checkpoint)
 }
 
+function validateTransitionPermit(permit) {
+  if (permit === null) return null
+  if (typeof permit !== "object" || Array.isArray(permit)) {
+    throw new SceneFlowError("invalid_navigation_record", "transitionPermit must be an object")
+  }
+  if (typeof permit.permitId !== "string" || !PERMIT_ID_PATTERN.test(permit.permitId)) {
+    throw new SceneFlowError("invalid_navigation_record", "transitionPermit.permitId is invalid")
+  }
+  for (const key of ["fromScene", "toScene"]) assertSceneId(permit[key])
+  if (permit.fromScene === permit.toScene) {
+    throw new SceneFlowError("invalid_navigation_record", "transitionPermit must change scenes")
+  }
+  if (!Number.isSafeInteger(permit.expectedStateRevision) || permit.expectedStateRevision < 0) {
+    throw new SceneFlowError("invalid_navigation_record", "transitionPermit.expectedStateRevision is invalid")
+  }
+  if (typeof permit.automatic !== "boolean" || typeof permit.issuedAt !== "string") {
+    throw new SceneFlowError("invalid_navigation_record", "transitionPermit mode or timestamp is invalid")
+  }
+  return structuredClone(permit)
+}
+
+function migrateSnapshot(record) {
+  if (record?.schemaVersion !== 1) return record
+  return { ...record, schemaVersion: SCHEMA_VERSION, transitionPermit: null }
+}
+
 function validateSnapshot(record) {
+  record = migrateSnapshot(record)
   if (typeof record !== "object" || record === null || Array.isArray(record) || record.schemaVersion !== SCHEMA_VERSION) {
     throw new SceneFlowError("invalid_navigation_record", "scene navigation record schema is invalid")
   }
@@ -98,6 +127,7 @@ function validateSnapshot(record) {
     lastSceneId: record.lastSceneId,
     revision: record.revision,
     checkpoint: validateCheckpoint(record.checkpoint),
+    transitionPermit: validateTransitionPermit(record.transitionPermit ?? null),
     updatedAt: record.updatedAt,
   }
 }
@@ -165,7 +195,14 @@ export class SceneFlowController {
       throw new SceneFlowError("scene_unavailable", `scene ${sceneId} is not available in this build`)
     }
     if (this._record.state !== "stage_select") throw new SceneFlowError("invalid_transition", "a scene can only be selected from the stage lobby")
-    return this._transition("loading", { sceneId })
+    const next = this._transition("loading", { sceneId })
+    if (this._record.transitionPermit !== null) {
+      this._record.transitionPermit = null
+      this._record.revision += 1
+      this._persist()
+      return this.snapshot()
+    }
+    return next
   }
 
   sceneReady(sceneId) {
@@ -215,6 +252,38 @@ export class SceneFlowController {
     return this._transition("paused")
   }
 
+  grantTransitionPermit({ permitId, fromScene, toScene, expectedStateRevision, automatic = false } = {}) {
+    const permit = validateTransitionPermit({
+      permitId,
+      fromScene,
+      toScene,
+      expectedStateRevision,
+      automatic,
+      issuedAt: this._now(),
+    })
+    if (this._record.state !== "paused" || this._record.sceneId !== permit.fromScene) {
+      throw new SceneFlowError("transition_unavailable", "a transition permit requires its paused source scene")
+    }
+    if (this._record.checkpoint?.sceneId !== permit.fromScene
+      || this._record.checkpoint.metadata?.revision !== permit.expectedStateRevision) {
+      throw new SceneFlowError("stale_checkpoint", "the transition checkpoint does not match the approved authority revision")
+    }
+    const previous = this._record.transitionPermit
+    if (previous !== null) {
+      const same = previous.permitId === permit.permitId
+        && previous.fromScene === permit.fromScene
+        && previous.toScene === permit.toScene
+        && previous.expectedStateRevision === permit.expectedStateRevision
+        && previous.automatic === permit.automatic
+      if (!same) throw new SceneFlowError("permit_conflict", "a different transition permit is already pending")
+      return this.snapshot()
+    }
+    this._record.transitionPermit = permit
+    this._record.revision += 1
+    this._persist()
+    return this.snapshot()
+  }
+
   beginMenuTransition() {
     this._record.lastSceneId = this._record.sceneId
     return this._transition("transitioning", { sceneId: null })
@@ -262,6 +331,7 @@ export function bindSceneOptions({
     return {
       markReady() { return true },
       setAvailable() {},
+      transitionToLobby() { throw error },
       error,
     }
   }
@@ -315,6 +385,42 @@ export function bindSceneOptions({
     }
   }
 
+  async function transitionToLobby({ permitId, toScene, expectedStateRevision, automatic = false } = {}) {
+    if (!ready || open || saving) throw new SceneFlowError("transition_unavailable", "scene transition is not currently available")
+    setBusy(true)
+    flow.pause()
+    try {
+      await onPause()
+      status.textContent = "正在写入并校验获准转场的权威检查点……"
+      flow.beginCheckpoint()
+      const metadata = await checkpoint()
+      flow.completeCheckpoint(metadata)
+      flow.grantTransitionPermit({
+        permitId,
+        fromScene: sceneId,
+        toScene,
+        expectedStateRevision,
+        automatic,
+      })
+      status.textContent = "检查点和转场许可已确认，正在返回阶段选择……"
+      flow.beginMenuTransition()
+      navigate("index.html")
+      return true
+    } catch (error) {
+      flow.failCheckpoint()
+      try {
+        await onResume()
+        flow.resume()
+      } catch {
+        // Preserve the original transition error; the persisted flow remains fail-closed.
+      }
+      status.textContent = `转场失败：${error.message}`
+      throw error
+    } finally {
+      setBusy(false)
+    }
+  }
+
   trigger.addEventListener("click", () => { void openMenu() })
   resumeButton.addEventListener("click", () => { void resumeScene() })
   saveButton.addEventListener("click", () => { void writeCheckpoint() })
@@ -347,6 +453,7 @@ export function bindSceneOptions({
     setAvailable(available) {
       trigger.disabled = !ready || !available
     },
+    transitionToLobby,
     snapshot: () => flow.snapshot(),
   }
 }

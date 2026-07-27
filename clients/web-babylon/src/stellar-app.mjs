@@ -3,6 +3,7 @@
 import { StellarController } from "../../../src/stellar/controller.mjs"
 import { formatStellarMetric } from "../../../src/stellar/display.mjs"
 import { validateStellarSpec } from "../../../src/stellar/validation.mjs"
+import { loadAutoEvolution, updateAutoEvolution } from "./auto-evolution.mjs"
 import { bindSceneOptions } from "./scene-flow.mjs"
 import { stellarJourney } from "./stellar-progression.mjs"
 import { createStellarScene } from "./stellar-scene.mjs"
@@ -47,6 +48,7 @@ let timer
 let cinematic = false
 let menuSuspended = false
 let sceneOptions
+let autoRunId
 
 if (!scene.supported) fallback.hidden = false
 
@@ -65,6 +67,15 @@ function setFeedback(text, tone = "info") {
 
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(controller.exportRecord()))
+}
+
+function autoEvolutionRecord() {
+  try { return loadAutoEvolution(localStorage) } catch { return null }
+}
+
+function updateAutomaticStatus(status, error = null) {
+  if (!autoRunId) return
+  updateAutoEvolution(status, { runId: autoRunId, error })
 }
 
 function renderJourney(state) {
@@ -148,7 +159,13 @@ function applyResult(result) {
     }
   }
   const snapshot = controller.snapshot()
-  if (snapshot.state.status === "completed") setFeedback("恒星循环完成：复杂物质已经进入稳定行星盘。", "success")
+  if (snapshot.state.status === "completed") {
+    setFeedback(autoRunId
+      ? "全自动演化自检完成：复杂物质已经进入稳定行星盘。"
+      : "恒星循环完成：复杂物质已经进入稳定行星盘。", "success")
+    updateAutomaticStatus("completed")
+    autoRunId = undefined
+  }
   else setFeedback(`权威状态已推进至 tick ${snapshot.state.tick}。`, "success")
   render()
 }
@@ -182,6 +199,10 @@ function schedule() {
 
 function reset() {
   if (!spec) return
+  if (autoRunId) {
+    updateAutomaticStatus("cancelled")
+    autoRunId = undefined
+  }
   clearTimeout(timer)
   controller = new StellarController(spec)
   save()
@@ -194,11 +215,13 @@ function reset() {
   render()
 }
 
-runButton.addEventListener("click", () => {
-  void mutate((snapshot) => controller.control(
+runButton.addEventListener("click", async () => {
+  const wasRunning = controller?.snapshot().control.mode === "running"
+  await mutate((snapshot) => controller.control(
     snapshot.control.mode === "running" ? "pause" : "resume",
     { expectedRevision: snapshot.revision },
   ))
+  if (autoRunId) updateAutomaticStatus(wasRunning ? "paused" : "stellar_running")
 })
 stepButton.addEventListener("click", () => {
   void mutate((snapshot) => controller.control("step", { expectedRevision: snapshot.revision }))
@@ -219,10 +242,12 @@ sceneOptions = bindSceneOptions({
   onPause() {
     menuSuspended = true
     clearTimeout(timer)
+    if (autoRunId) updateAutomaticStatus("paused")
     render()
   },
   onResume() {
     menuSuspended = false
+    if (autoRunId) updateAutomaticStatus("stellar_running")
     render()
     schedule()
   },
@@ -245,14 +270,42 @@ async function start() {
     return response.json()
   }))
   const stored = localStorage.getItem(STORAGE_KEY)
-  controller = stored === null ? new StellarController(spec) : StellarController.restore(spec, JSON.parse(stored))
-  if (stored === null) save()
+  const automatic = autoEvolutionRecord()
+  const automaticArrival = automatic?.status === "transitioning" && automatic.targetScene === "stellar"
+  const automaticResume = ["stellar_running", "paused"].includes(automatic?.status) && automatic.targetScene === "stellar"
+  controller = automaticArrival || stored === null
+    ? new StellarController(spec)
+    : StellarController.restore(spec, JSON.parse(stored))
+  if (automaticArrival || stored === null) save()
   busy = false
   const snapshot = controller.snapshot()
   addEvent(stored === null ? "原始物质云开始聚集。" : `已验证并恢复 tick ${snapshot.state.tick} 的恒星记录。`)
   setFeedback("所有画面均由确定性权威快照派生；可以暂停、单步或选择时间倍率。")
   render()
   if (!sceneOptions.markReady()) return
+  if (automaticArrival || automaticResume) {
+    autoRunId = automatic.runId
+    let snapshot = controller.snapshot()
+    if (snapshot.state.status === "completed") {
+      updateAutomaticStatus("completed")
+      autoRunId = undefined
+    } else if (automatic.status === "paused") {
+      if (snapshot.control.mode === "running") controller.control("pause", { expectedRevision: snapshot.revision })
+    } else {
+      updateAutomaticStatus("stellar_running")
+      if (snapshot.control.speed !== 16) {
+        controller.control("set_speed", { speed: 16, expectedRevision: snapshot.revision })
+        snapshot = controller.snapshot()
+      }
+      if (snapshot.control.mode !== "running") controller.control("resume", { expectedRevision: snapshot.revision })
+    }
+    save()
+    if (automaticArrival) addEvent("全自动接力已通过一次性转场许可进入星辰阶段。", "transition")
+    setFeedback(automatic.status === "paused"
+      ? "全自动演化保持暂停；点击“自主演化”可以从已确认记录继续。"
+      : "全自动演化正在以 ×16 时间倍率验证完整恒星生命周期。", automatic.status === "paused" ? "warning" : "pending")
+    render()
+  }
   schedule()
 }
 

@@ -1,0 +1,51 @@
+.civilization-stage {
+  background:
+    radial-gradient(circle at 48% 42%, rgba(45, 214, 187, .18), transparent 27%),
+    radial-gradient(circle at 38% 32%, rgba(79, 114, 255, .2), transparent 44%),
+    linear-gradient(150deg, #03131d, #02050c 52%, #091726);
+}
+.civilization-haze { opacity: .5; filter: hue-rotate(52deg) saturate(1.25); }
+#observation-provenance { display: block; margin-top: 9px; color: #607c99; font-size: .58rem; letter-spacing: .04em; }
+.civilization-timeline-panel { top: clamp(238px, 29vh, 292px); width: min(360px, calc(100% - 40px)); }
+.timeline-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
+.timeline-fields label, .experiment-form label { color: #7f9bb8; font-size: .58rem; letter-spacing: .05em; }
+.timeline-fields select, .experiment-form select, .experiment-form input {
+  width: 100%; min-height: 36px; margin-top: 5px; padding: 7px 9px; border: 1px solid rgba(83, 236, 255, .22);
+  border-radius: 5px; color: #dffbff; background: rgba(4, 18, 29, .9); font: inherit;
+}
+.causal-status { margin: 0; padding: 9px 12px; border-top: 1px solid rgba(83, 236, 255, .12); color: #72ffbd; font-size: .58rem; line-height: 1.45; }
+.experiment-form { padding: 0 12px 11px; }
+.experiment-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 7px; }
+.experiment-form > div:last-child { display: grid; grid-template-columns: 1fr auto; gap: 7px; }
+.experiment-form button, .experiment-review button { align-self: end; min-height: 36px; padding: 6px 12px; border: 1px solid rgba(114, 255, 189, .36); border-radius: 5px; color: #72ffbd; background: rgba(8, 39, 41, .78); cursor: pointer; }
+.timeline-fields select:disabled, .experiment-form select:disabled, .experiment-form input:disabled, .experiment-form button:disabled, .experiment-review button:disabled { cursor: not-allowed; opacity: .5; }
+.experiment-review { margin: 0 12px 11px; padding: 9px; border: 1px solid rgba(255, 202, 92, .32); border-radius: 6px; background: rgba(39, 29, 8, .68); }
+.experiment-review p { margin: 0; color: #ffe6a7; font-size: .62rem; line-height: 1.5; }
+.experiment-review small { display: block; margin-top: 5px; color: #a98e5c; font-size: .52rem; overflow-wrap: anywhere; }
+.experiment-review > div { display: flex; gap: 7px; margin-top: 8px; }
+.experiment-review #experiment-discard { color: #9ab1c5; border-color: rgba(138, 168, 196, .28); background: rgba(13, 25, 36, .72); }
+.comparison-status { margin: 0; padding: 9px 12px; border-top: 1px solid rgba(83, 236, 255, .12); color: #8aa8c4; font-size: .6rem; line-height: 1.5; }
+.comparison-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 0; padding: 0 12px 12px; list-style: none; }
+.comparison-metrics li { padding: 7px; border: 1px solid rgba(83, 236, 255, .12); border-radius: 5px; background: rgba(7, 29, 40, .54); }
+.comparison-metrics span { display: block; color: #6f91aa; font-size: .52rem; }
+.comparison-metrics strong { display: block; margin-top: 3px; color: #d8fbff; font-size: .64rem; }
+.civilization-events { left: 50%; width: min(380px, calc(100% - 40px)); transform: translateX(-50%); }
+.civilization-control-panel { width: min(390px, calc(100% - 40px)); }
+.civilization-stats { grid-template-columns: repeat(3, minmax(74px, 1fr)); }
+.civilization-actions button { min-height: 68px; }
+
+@media (min-width: 901px) and (max-width: 980px) {
+  .civilization-timeline-panel { top: 235px; }
+}
+
+@media (max-width: 900px) {
+  .civilization-timeline-panel { position: relative; inset: auto; width: 100%; max-height: none; margin: 0 0 14px; }
+  .civilization-events { left: auto; transform: none; }
+}
+
+@media (max-width: 560px) {
+  .timeline-fields { grid-template-columns: 1fr; }
+  .experiment-fields { grid-template-columns: 1fr; }
+  .civilization-stats { grid-template-columns: repeat(2, minmax(92px, 1fr)); }
+  .comparison-metrics { grid-template-columns: 1fr; }
+}

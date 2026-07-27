@@ -13,6 +13,12 @@ const scenes = [
     bundle: "app.js",
     styles: ["styles.css"],
     content: [{ source: "content/chapters/origin.json", output: "origin.json" }],
+    experimentalOverride: {
+      page: "origin-director.html",
+      sourceEntry: "director-app.mjs",
+      bundle: "director-app.js",
+      styles: ["styles.css", "director.css"],
+    },
   },
   {
     id: "stellar",
@@ -27,17 +33,45 @@ const scenes = [
     styles: ["styles.css", "stellar.css"],
     content: [{ source: "content/stellar/presets/first-light.json", output: "stellar.json" }],
   },
+  {
+    id: "civilization",
+    order: 3,
+    chapter: "实验纪元",
+    title: "文明演化观测台",
+    summary: "通过统一只读观察契约控制文明时间，并比较确定性时间线分支。",
+    visibility: "experimental",
+    page: "civilization.html",
+    sourceEntry: "civilization-app.mjs",
+    bundle: "civilization-app.js",
+    styles: ["styles.css", "civilization.css"],
+    content: [{ source: "content/civilizations/presets/tidal-archive.json", output: "civilization.json" }],
+  },
 ]
 
 export const SCENE_REGISTRY = Object.freeze(scenes.map((scene) => Object.freeze({
   ...scene,
   styles: Object.freeze([...scene.styles]),
   content: Object.freeze(scene.content.map((entry) => Object.freeze({ ...entry }))),
+  experimentalOverride: scene.experimentalOverride
+    ? Object.freeze({ ...scene.experimentalOverride, styles: Object.freeze([...scene.experimentalOverride.styles]) })
+    : undefined,
 })))
 
 export function scenesForProfile(profile = "public") {
   if (!["public", "experimental"].includes(profile)) throw new TypeError(`Unknown scene profile: ${profile}`)
-  return SCENE_REGISTRY.filter((scene) => scene.visibility === "public" || profile === "experimental")
+  return SCENE_REGISTRY
+    .filter((scene) => scene.visibility === "public" || profile === "experimental")
+    .map((scene) => {
+      const { experimentalOverride, ...base } = scene
+      const resolved = profile === "experimental" && experimentalOverride
+        ? { ...base, ...experimentalOverride }
+        : base
+      return Object.freeze({
+        ...resolved,
+        styles: Object.freeze([...resolved.styles]),
+        content: Object.freeze(resolved.content.map((entry) => Object.freeze({ ...entry }))),
+      })
+    })
 }
 
 export function publicSceneDescriptor(scene) {

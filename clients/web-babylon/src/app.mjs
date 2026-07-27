@@ -6,6 +6,7 @@ import { createBrowserEvolutionAdapter, DEFAULT_BROWSER_STORAGE_KEY } from "../.
 import { TYPES } from "../../../src/interop/message-types.mjs"
 import { MemoryRouter } from "../../../src/interop/router.mjs"
 import { playActionSound } from "./audio.mjs"
+import { waitForAuthorityCommit } from "./authority-ack.mjs"
 import { firstRealmMission } from "./progression.mjs"
 import { createAnimeUniverse } from "./scene.mjs"
 import { bindSceneOptions } from "./scene-flow.mjs"
@@ -23,6 +24,7 @@ const pack = validatePack(await fetch("./origin.json").then((response) => {
   if (!response.ok) throw new Error(`内容包加载失败：HTTP ${response.status}`)
   return response.json()
 }))
+const fullAutoPlan = Object.freeze([...pack.demo, "create", "stabilize", "destroy"])
 
 const canvas = document.querySelector("#render-canvas")
 const scene = createAnimeUniverse(canvas, { reducedMotion })
@@ -41,12 +43,15 @@ const autoButton = document.querySelector("#auto-demo")
 const fallback = document.querySelector("#render-fallback")
 const realmTransition = document.querySelector("#realm-transition")
 const pending = new Map()
+const idleWaiters = new Set()
 
 let state
 let revision = 0
 let busy = true
 let autoRunning = false
+let autoStopRequested = false
 let menuSuspended = false
+let overlaySuspended = false
 let game
 let control
 let sceneOptions
@@ -139,7 +144,7 @@ function render() {
     const available = action.availableIn.includes(state.phase)
     const missing = missingRequirements(action)
     const ready = available && missing.length === 0
-    button.disabled = busy || autoRunning || menuSuspended || !ready
+    button.disabled = busy || autoRunning || menuSuspended || overlaySuspended || !ready
     button.classList.toggle("locked", !ready)
     button.setAttribute("aria-disabled", String(!ready))
     const name = document.createElement("strong")
@@ -153,9 +158,9 @@ function render() {
     button.append(name, detail)
     return button
   }))
-  resetButton.disabled = busy || autoRunning || menuSuspended
-  autoButton.disabled = busy || autoRunning || menuSuspended
-  sceneOptions?.setAvailable(!busy)
+  resetButton.disabled = busy || autoRunning || menuSuspended || overlaySuspended
+  autoButton.disabled = busy || autoRunning || menuSuspended || overlaySuspended
+  sceneOptions?.setAvailable(!busy && !overlaySuspended)
   scene.setState(state)
 }
 
@@ -193,10 +198,12 @@ async function request(type, kind, data) {
   return result
 }
 
-async function performAction(actionId, { quiet = false } = {}) {
+async function performAction(actionId, { quiet = false, onAuthorityApplied, onAuthorityRejected } = {}) {
   const action = pack.actions[actionId]
   if (!action.availableIn.includes(state.phase)) {
-    setFeedback(`${action.title}在当前维度不可执行。`, "warning")
+    const error = Object.assign(new Error(`${action.title}在当前维度不可执行。`), { code: "wrong_phase" })
+    setFeedback(error.message, "warning")
+    onAuthorityRejected?.(error)
     return false
   }
   busy = true
@@ -209,12 +216,15 @@ async function performAction(actionId, { quiet = false } = {}) {
       context: context(), actionId, parameters: {}, expectedRevision: revision,
     })
     if (message.type === TYPES.ERROR) {
+      const error = Object.assign(new Error(message.data.message), { code: message.data.code })
       setFeedback(`${message.data.code}：${message.data.message}`, "warning")
       if (!quiet) addEvent(message.data.message, "warning")
+      onAuthorityRejected?.(error)
       return false
     }
     state = message.data.state
     revision = message.data.revision
+    onAuthorityApplied?.({ outcome: "applied", authorityRevision: revision, phase: state.phase, actionId })
     scene.pulse(actionId)
     playActionSound(actionId)
     render()
@@ -233,10 +243,13 @@ async function performAction(actionId, { quiet = false } = {}) {
   } catch (error) {
     setFeedback(error.message, "warning")
     addEvent(error.message, "warning")
+    onAuthorityRejected?.(error)
     return false
   } finally {
     busy = false
     render()
+    for (const resolve of idleWaiters) resolve()
+    idleWaiters.clear()
   }
 }
 
@@ -252,6 +265,45 @@ function resetLocal() {
   setFeedback("本地宇宙已重开，可以从观察混沌开始。", "success")
   addEvent("零维原点重新形成。")
   render()
+}
+
+async function runAutomaticPlan(actionIds, {
+  label,
+  reset = true,
+  delay = reducedMotion ? 80 : 260,
+  requireMission = false,
+} = {}) {
+  if (busy || autoRunning || menuSuspended || overlaySuspended) {
+    const error = new Error("当前场景正忙，不能启动自动演化")
+    error.code = "authority_busy"
+    throw error
+  }
+  autoRunning = true
+  autoStopRequested = false
+  if (reset) resetLocal()
+  render()
+  setFeedback(`${label}正在执行；每一步仍需等待权威状态确认。`, "pending")
+  let completedSteps = 0
+  try {
+    for (const actionId of actionIds) {
+      if (autoStopRequested || menuSuspended) break
+      const completed = await performAction(actionId, { quiet: true })
+      if (!completed) break
+      completedSteps += 1
+      if (autoStopRequested || menuSuspended) break
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
+    const mission = firstRealmMission(state)
+    const completed = completedSteps === actionIds.length && (!requireMission || mission.complete)
+    if (completed && requireMission) setFeedback("全自动演化已完成原点自检：三维领域与首次物质循环均已确认。", "success")
+    else if (completed) setFeedback(`${label}已完成。`, "success")
+    else if (autoStopRequested || menuSuspended) setFeedback("全自动演化已安全停止；已确认的权威状态继续保留。", "warning")
+    return { outcome: completed ? "completed" : "stopped", completedSteps, observation: structuredClone(state) }
+  } finally {
+    autoRunning = false
+    autoStopRequested = false
+    render()
+  }
 }
 
 function readControlSequence() {
@@ -295,41 +347,101 @@ async function start() {
   addEvent(revision === 0 ? "原始能量信息体苏醒。" : `已恢复本地宇宙 revision ${revision}。`)
   setFeedback("拖动场景调整视角，滚轮缩放；所有行为均由 ESIP 权威端确认。")
   render()
-  if (!sceneOptions.markReady()) return
+  if (!sceneOptions.markReady()) return null
+  return Object.freeze({
+    context: () => structuredClone(context()),
+    observation(availableScenes = ["origin"]) {
+      const mission = firstRealmMission(state)
+      return {
+        sceneId: "origin",
+        phase: state.phase,
+        stateRevision: revision,
+        availableActions: Object.entries(pack.actions)
+          .filter(([, action]) => action.availableIn.includes(state.phase) && missingRequirements(action).length === 0)
+          .map(([actionId]) => actionId),
+        completedMilestones: mission.complete ? ["realm_anchored"] : [],
+        availableScenes: [...availableScenes],
+      }
+    },
+    canOpenOverlay: () => !busy && !autoRunning && !menuSuspended,
+    setOverlayOpen(open) {
+      overlaySuspended = Boolean(open)
+      render()
+    },
+    async executeApprovedAction(actionId) {
+      if (busy || autoRunning || menuSuspended) {
+        const error = new Error("当前权威端正忙，不能执行导演行为")
+        error.code = "authority_busy"
+        throw error
+      }
+      return waitForAuthorityCommit(({ confirm, fail }) => performAction(actionId, {
+        onAuthorityApplied: confirm,
+        onAuthorityRejected: fail,
+      }))
+    },
+    runFullEvolution() {
+      return runAutomaticPlan(fullAutoPlan, { label: "全自动演化", requireMission: true })
+    },
+    stopFullEvolution() {
+      if (autoRunning) autoStopRequested = true
+    },
+    isAutoRunning: () => autoRunning,
+    async completeSceneTransition(plan, { permitId, automatic = false } = {}) {
+      if (busy || autoRunning || menuSuspended) {
+        const error = new Error("当前权威端正忙，不能提交场景转移")
+        error.code = "authority_busy"
+        throw error
+      }
+      if (plan?.type !== "scene_transition_permit" || plan.fromScene !== "origin") {
+        const error = new Error("导演计划不是当前原点场景的有效转场许可")
+        error.code = "invalid_transition_permit"
+        throw error
+      }
+      if (plan.expectedStateRevision !== revision) {
+        const error = new Error("权威状态在转场前已经变化")
+        error.code = "stale_observation"
+        throw error
+      }
+      return sceneOptions.transitionToLobby({
+        permitId,
+        toScene: plan.toScene,
+        expectedStateRevision: plan.expectedStateRevision,
+        automatic,
+      })
+    },
+    isBusy: () => busy,
+    whenIdle: () => busy ? new Promise((resolve) => idleWaiters.add(resolve)) : Promise.resolve(),
+    publishNarrative(cue, tone) {
+      addEvent(cue, tone === "warning" ? "warning" : "event")
+      setFeedback(cue, tone === "warning" ? "warning" : "success")
+      return { outcome: "published", gameStateChanged: false }
+    },
+  })
 }
 
 actions.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]")
-  if (!button || busy || autoRunning || menuSuspended) return
+  if (!button || busy || autoRunning || menuSuspended || overlaySuspended) return
   performAction(button.dataset.action)
 })
 
 resetButton.addEventListener("click", () => {
-  if (!busy && !autoRunning && !menuSuspended) resetLocal()
+  if (!busy && !autoRunning && !menuSuspended && !overlaySuspended) resetLocal()
 })
 
 autoButton.addEventListener("click", async () => {
-  if (busy || autoRunning || menuSuspended) return
-  autoRunning = true
-  if (state.phase !== "origin_0d" || state.steps !== 0) resetLocal()
-  render()
-  setFeedback("自动演化正在执行：观察 → 撕裂 → 大爆炸", "pending")
-  for (const actionId of pack.demo) {
-    if (menuSuspended) break
-    const completed = await performAction(actionId, { quiet: true })
-    if (!completed) break
-    await new Promise((resolve) => setTimeout(resolve, reducedMotion ? 120 : 720))
-    if (menuSuspended) break
+  try {
+    await runAutomaticPlan(pack.demo, { label: "自动演化演示", delay: reducedMotion ? 120 : 720 })
+  } catch (error) {
+    setFeedback(`${error.code ?? "auto_error"}：${error.message}`, "warning")
   }
-  autoRunning = false
-  render()
 })
 
 sceneOptions = bindSceneOptions({
   sceneId: "origin",
   onPause() {
     menuSuspended = true
-    autoRunning = false
+    autoStopRequested = true
     render()
   },
   onResume() {
@@ -347,10 +459,11 @@ sceneOptions = bindSceneOptions({
   },
 })
 
-start().catch((error) => {
+export const originAppReady = start().catch((error) => {
   busy = true
   phaseBadge.textContent = "启动失败"
   objective.textContent = error.message
   setFeedback("请检查浏览器 WebGL 和本地存储权限。", "warning")
   fallback.hidden = false
+  return null
 })
