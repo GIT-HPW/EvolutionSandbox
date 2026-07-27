@@ -1,6 +1,6 @@
 # 确定性文明内核
 
-- 当前状态：第二个工程切片（可控制、可重放、可分支、可通过 ESIP 调用）
+- 当前状态：可控制、可重放、可分支、可通过 ESIP 调用，并具备 sidecar 恢复与 crash-safe 调度
 - 内容 schema：`CivilizationSpec` v1
 - 文明状态 schema：v1
 
@@ -18,13 +18,14 @@
 - 通过控制器暂停、继续、单步、设置倍速或显式推进；
 - 按固定 tick 生成 hash 链快照，并从最近快照确定性重放；
 - 从历史 tick 建立独立子时间线，切换时间线时不回写父时间线；
-- 通过 ESIP 创建文明、提交控制命令和读取精简快照。
+- 通过 ESIP 创建文明、提交控制命令和读取精简快照；
+- 通过 ESIP 只读评审并显式提交受限实验提案；
+- 使用原子 checkpoint 恢复完整 controller，并通过时间槽 ID 与 pulse 租约避免重启重复推进。
 
-当前内核尚未接入：
+当前仍未接入：
 
-- sidecar 定时调度、进程重启恢复和持久队列；
-- Babylon 文明观测台；
-- openVirFactory 自然语言生成和战略意图；
+- 同源身份网关和真实 provider 往返；
+- openVirFactory 生成全新 `CivilizationSpec` 的流程；
 - 聚落、派系和代表人物的权威状态。
 
 这些能力会在规则语义稳定后逐层接入，AI 和表现客户端不会直接写文明指标。
@@ -84,7 +85,9 @@ scripts/check-civilization-content.mjs
 test/civilization-engine.test.mjs
 test/civilization-controller.test.mjs
 src/interop/civilization-adapter.mjs
+src/interop/civilization-runtime.mjs
 test/civilization-adapter.test.mjs
+test/civilization-runtime.test.mjs
 protocol/schemas/civilization-*.schema.json
 ```
 
@@ -120,7 +123,7 @@ node --test test/civilization-engine.test.mjs
 
 ## 6. ESIP 应用层接口
 
-`createCivilizationAdapter()` 承担单个文明的 ESIP 权威入口，公开六种文明消息：
+`createCivilizationAdapter()` 承担单个文明的 ESIP 权威入口，公开十种文明消息：
 
 | 消息 | kind | 用途 |
 | --- | --- | --- |
@@ -130,16 +133,58 @@ node --test test/civilization-engine.test.mjs
 | `civilization.updated.v1` | event | 返回更新快照和本次事件批次 |
 | `civilization.snapshot.requested.v1` | query | 请求当前状态，可限制近期事件数量 |
 | `civilization.snapshot.v1` | result | 返回不含内部快照档案的精简视图 |
+| `civilization.experiment.review.requested.v1` | query | 只读校验提案来源并编译固定 Rule Patch |
+| `civilization.experiment.reviewed.v1` | result | 返回仍为 `pending` 的提案和 patch，不改变 revision |
+| `civilization.experiment.commit.requested.v1` | command | 在提交点重新校验提案并建立差异分支 |
+| `civilization.experiment.committed.v1` | event | 返回新分支快照或同一提案的重复确认 |
 
-适配器通过 `controllerChanged(record, snapshot)` 回调把持久化决定交给宿主；回调在成功创建和每次成功命令后执行。协议 schema、AsyncAPI 与示例位于 `protocol/`，执行 `npm run check:protocol` 可验证三者一致。
+适配器默认通过 `controllerChanged(record, snapshot)` 回调把持久化决定交给宿主；回调在成功创建和每次成功命令后执行。需要可恢复调度时可改为传入下节的 `CivilizationSidecarRuntime`，两种持久化权威不能同时启用。
 
-## 7. 下一切片
+实验请求必须携带 `expiresat`，并通过显式 `experimentBindings` 把请求 `source` 绑定到唯一的 `actorId` 与 `universeId`；`subject` 必须等于 `actor/<actorId>`。评审是无副作用 query，提交 command 会重新验证 revision、活动时间线、tick、history hash 和目标时间线。已写入 controller 因果记录的同一 `proposalId` 在进程或 runtime 重启后重投时返回 `duplicate: true`，不会再次创建分支。协议 schema、AsyncAPI 与示例位于 `protocol/`，执行 `npm run check:protocol` 可验证三者一致。
 
-下一步是在不改变现有 tick 结果的前提下增加：
+## 7. Sidecar 恢复与 crash-safe pulse
 
-1. sidecar 中的文明控制器记录恢复、调度租约和 crash-safe pulse；
-2. 可审计的玩家/导演战略意图，让分支从同一历史点产生真实差异；
-3. Babylon 文明观测台最小纵切，消费精简快照与事件批次；
-4. openVirFactory 的“一句话 → 待确认 CivilizationSpec”适配层。
+`src/interop/civilization-runtime.mjs` 提供独立于 Luanti 命令队列的文明运行时。checkpoint 保存完整 spec、universe 绑定、controller record、当前 pulse 租约和最近 256 个已完成 pulse ID；文件使用 schema、SHA-256 校验和与临时文件原子替换，损坏、host 变化或 controller 无法确定性重放时拒绝恢复。
+
+```js
+import {
+  createCheckpointCivilizationRuntimeStore,
+  createCivilizationAdapter,
+  createCivilizationPulseScheduler,
+  createCivilizationSidecarRuntime,
+} from "../src/interop/index.mjs"
+
+const runtime = createCivilizationSidecarRuntime({
+  store: createCheckpointCivilizationRuntimeStore({
+    directory: "runtime/civilization-alpha",
+  }),
+  hostId: "civilization-engine-alpha",
+  leaseMs: 5000,
+})
+await runtime.initialize()
+
+const adapter = createCivilizationAdapter({ runtime })
+const scheduler = createCivilizationPulseScheduler({ runtime, intervalMs: 1000 })
+await scheduler.runDue()
+```
+
+适配器收到首个 `civilization.create.requested.v1` 后把 spec 与 controller 原子落盘；重建适配器时可直接从同一 runtime 恢复并回答 query。调度器把时间映射为稳定的 `scheduled-pulse:<slot>`：执行前先落盘租约，再从已持久 controller 复制候选并推进，最后原子提交新 controller 与完成记录。
+
+- 租约落盘后进程退出：未到期时其他 worker 返回 `in_flight`，到期后从未改变的 base revision 确定性重算；
+- controller 已提交但调用方未收到确认：同一 pulse ID 返回 `duplicate`，不会再次推进；
+- 普通 ESIP 命令与 active pulse lease 冲突时失败关闭，不能跨 revision 覆盖；
+- 暂停或已终止文明不会留下无效租约；
+- 当前实现面向单机单写者，不提供跨进程文件锁、远程共识或无限幂等保留。
+
+## 8. 实验提交与下一切片
+
+正式实验 ESIP 的评审、提交、身份绑定、请求过期和跨重启幂等语义已经完成。它只增加库级协议与权威适配器能力，不会让 openVirFactory 的回环模型端点直接获得 controller 写权限，也没有新增浏览器直连或公网 HTTP 路由。
+
+下一步是在保持现有权威边界的前提下增加：
+
+1. 同源身份网关，把已认证网页会话显式映射为 ESIP source、actor 和 universe；
+2. 真实 provider 往返手工验收、超时/速率限制与运维诊断。
+
+Babylon 文明观测台和可审计实验纵切已经完成：页面通过 `WorldObservation v0` 消费精简指标与事件，先只读生成或复核 `WorldExperimentProposal v0`，再次确认后才把请求交回 `CivilizationController`。openVirFactory 已能用独立模型工具返回固定 pending 提案，且不会进入 Luanti 队列。controller record schema 2 为每条时间线保存继承 policy 与直接 causality，旧 schema 1 记录迁移时保持零偏移且不会虚构来源。完整边界见 [WorldExperimentProposal v0](world-experiment.md)。
 
 详细产品推演见 [文明自动演化玩法推演与可行性报告](civilization-simulation-feasibility.md)。

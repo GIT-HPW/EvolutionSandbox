@@ -27,6 +27,7 @@ GitHub Pages 上的浏览器游戏是第二个实际平台实现：UI 控制适�
 
 - `src/interop/http-sidecar.mjs`：只监听回环地址的认证 HTTP sidecar；
 - `src/interop/sidecar-store.mjs`：内存测试存储和带校验的 journal/checkpoint 持久存储；
+- `src/interop/civilization-runtime.mjs`：文明 controller 的原子 checkpoint、pulse 租约和时间槽幂等调度；
 - `mods/evolution_bridge`：Luanti 原生 HTTP 适配模组；
 - `evolution_core`：最终读取和写入玩家演化状态；
 - `cli/sidecar-client.mjs`：用于状态查询和单步行为测试的本地控制端。
@@ -50,6 +51,8 @@ npm run sidecar
 ```
 
 sidecar 默认把命令、租约、去重指纹、source sequence、结果和 cursor 持久化到被 Git 忽略的 `runtime/sidecar/`。正常停止和意外重启都从同一目录恢复；测试或临时演示可以显式设置 `$env:ESIP_SIDECAR_STORE = "memory"` 使用纯内存模式。
+
+文明模拟的领域记录不写入上述 Luanti 消息队列。应用宿主可以使用 `CheckpointCivilizationRuntimeStore` 把它保存到独立的 `runtime/civilization-*/` 目录，再由 `CivilizationPulseScheduler` 用稳定时间槽 ID 调用 crash-safe pulse。文明库已经定义正式实验评审/提交消息、source/actor/universe 绑定、请求过期和跨重启提交幂等，但当前仍只是 Node 库级接入点，不新增 HTTP 路由；同源身份网关必须单独实现，不能把现有 Luanti sidecar 或 openVirFactory 回环接口直接暴露给浏览器。
 
 在第二个终端启动 Luanti：
 
@@ -176,6 +179,7 @@ evolution_bridge_url = http://127.0.0.1:7070
 - sidecar 是本机开发/单机部署边界，不是公网网关；跨主机必须另加 TLS、独立身份、速率限制和审计。
 - 默认 journal 模式持久化队列、租约、结果游标、source sequence 和去重记录；checkpoint 与每条 journal 记录都有 schema、连续 revision 和校验值，损坏或绑定不一致时失败关闭。
 - 当前持久存储面向单机单 sidecar 进程，不提供多进程写入、远程复制、跨主机共识或生产 broker 的长期保留能力。
+- 文明 runtime 同样是单机单写者；最近 256 个 pulse ID 提供有界幂等，部署端不得在保留窗口内复用调度 ID。
 - 当前只支持查询状态/时间线、执行 7 个无参数 Evolution 行为和创建/加入时间线，不支持任意 Lua、节点批处理、文件读写或数据库导出。
 - `actorId` 是本地生成的不透明标识；玩家名映射不进入 ESIP，但 actor ID 本身仍应按游戏身份标识保护。跨平台不能仅凭两个 actor ID 字符串相同就合并账户。
 - 浏览器权威适配器支持按 registry revision 追赶最近 256 个时间线事件；Luanti 可返回同样的注册表增量，sidecar 会持久化结果 cursor，但还不提供主动订阅或跨主机推送。
